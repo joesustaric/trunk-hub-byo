@@ -12,3 +12,10 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 * `npx cdk deploy`  deploy this stack to your default AWS account/region
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
+
+
+## Recording ADRS
+
+We use [adr-tools](https://github.com/npryce/adr-tools) to record our Architecture Decision Records (ADRs).
+
+More context on ADRs please read [this](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions).
