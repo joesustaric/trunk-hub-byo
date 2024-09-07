@@ -3,18 +3,8 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { TrunkHubByoStack } from '../lib/trunk-hub-byo-stack';
 import { Tags } from 'aws-cdk-lib';
-import { CheckovValidator } from '@bridgecrew/cdk-validator-checkov'
 
-const app = new cdk.App({
-  context: {
-    policyValidationBeta1: [
-      new CheckovValidator(),
-    ],
-    context: {
-      '@aws-cdk/core:validationReportJson': true,
-    }
-  },
-});
+const app = new cdk.App();
 
 // Define environment configurations
 const devEnv = { account: '872676544639', region: 'ap-southeast-2' };
