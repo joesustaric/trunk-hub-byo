@@ -2,20 +2,50 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { TrunkHubByoStack } from '../lib/trunk-hub-byo-stack';
+import { Tags } from 'aws-cdk-lib';
+import { CheckovValidator } from '@bridgecrew/cdk-validator-checkov'
 
-const app = new cdk.App();
-new TrunkHubByoStack(app, 'TrunkHubByoStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
-
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
-
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
-
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+const app = new cdk.App({
+  context: {
+    policyValidationBeta1: [
+      new CheckovValidator(),
+    ],
+    context: {
+      '@aws-cdk/core:validationReportJson': true,
+    }
+  },
 });
+
+// Define environment configurations
+const devEnv = { account: '872676544639', region: 'ap-southeast-2' };
+const prodEnv = { account: '872676544639', region: 'ap-southeast-2' };
+
+// Function to apply tags to a stack
+function applyTags(stack: cdk.Stack, tags: { [key: string]: string }) {
+  for (const [key, value] of Object.entries(tags)) {
+    Tags.of(stack).add(key, value);
+  }
+}
+
+// Tags for dev and prod environments
+const commonTags = {
+  system: 'TrunkHubByo',
+};
+
+const devTags = {
+  ...commonTags,
+  environment: 'development',
+};
+
+const prodTags = {
+  ...commonTags,
+  environment: 'production',
+};
+
+// Instantiate the stack for the dev environment
+const devStack = new TrunkHubByoStack(app, 'TrunkHubByoStackDev', { env: devEnv });
+applyTags(devStack, devTags);
+
+// Instantiate the stack for the prod environment
+const prodStack = new TrunkHubByoStack(app, 'TrunkHubByoStackProd', { env: prodEnv });
+applyTags(prodStack, prodTags);
