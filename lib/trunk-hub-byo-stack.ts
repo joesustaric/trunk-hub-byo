@@ -12,7 +12,7 @@ export class TrunkHubByoStack extends cdk.Stack {
 
     const vpc = new ec2.Vpc(this, 'TrunkHubCDKVpc', {
       ipAddresses: ec2.IpAddresses.cidr(props.vpcCidr),
-      maxAzs: 2,gi
+      maxAzs: 2,
       subnetConfiguration: [
         {
           cidrMask: 24,
