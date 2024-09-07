@@ -19,7 +19,7 @@ function applyTags(stack: cdk.Stack, tags: { [key: string]: string }) {
 
 // Tags for dev and prod environments
 const commonTags = {
-  system: 'TrunkHubByo',
+  system: 'TrunkHubByoVPC',
 };
 
 const devTags = {
