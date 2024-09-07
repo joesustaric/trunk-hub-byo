@@ -37,6 +37,7 @@ const prodTags = {
 const devStack = new TrunkHubVPCStack(app, 'trunk-hub-vpc-dev', {
   env: devEnv,
   vpcCidr: '10.0.0.0/16',
+  description: 'Dev environment VPC stack for TrunkHub',
 });
 applyTags(devStack, devTags);
 
@@ -44,5 +45,6 @@ applyTags(devStack, devTags);
 const prodStack = new TrunkHubVPCStack(app, 'trunk-hub-vpc-prod', {
   env: prodEnv,
   vpcCidr: '10.0.0.0/16',
+  description: 'Prod environment VPC stack for TrunkHub',
 });
 applyTags(prodStack, prodTags);

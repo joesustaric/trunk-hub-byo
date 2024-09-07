@@ -1,12 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import * as TrunkHubByo from '../lib/trunk-hub-byo-stack';
+import * as TrunkHubByo from '../lib/trunk-hub-vpc-stack';
 
 test('VPC is created with correct properties', () => {
 	// Given
 	const app = new cdk.App();
 	// WHEN
-	const stack = new TrunkHubByo.TrunkHubByoStack(app, 'MyTestStack', {
+	const stack = new TrunkHubByo.TrunkHubVPCStack(app, 'MyTestStack', {
 		vpcCidr: '10.0.0.0/16',
 	});
   	// THEN

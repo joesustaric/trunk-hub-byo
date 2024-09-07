@@ -27,7 +27,6 @@ checkov
 ```
 There is a configuration file in the root of the project with all the options for checkov to run.
 
-
 ## Recording ADRS
 
 We use [adr-tools](https://github.com/npryce/adr-tools) to record our Architecture Decision Records (ADRs).
