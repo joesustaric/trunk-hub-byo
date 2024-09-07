@@ -6,18 +6,13 @@ interface TrunkHubByoStackProps extends cdk.StackProps {
   vpcCidr: string;
 }
 export class TrunkHubByoStack extends cdk.Stack {
-  /**
-   *
-   * @param {cdk.Construct} scope
-   * @param {string} id
-   * @param {cdk.StackProps=} props
-   */
+
   constructor(scope: Construct, id: string, props: TrunkHubByoStackProps) {
     super(scope, id, props);
 
     const vpc = new ec2.Vpc(this, 'TrunkHubCDKVpc', {
       ipAddresses: ec2.IpAddresses.cidr(props.vpcCidr),
-      maxAzs: 2, // Default is all AZs in the region
+      maxAzs: 2,gi
       subnetConfiguration: [
         {
           cidrMask: 24,
@@ -31,6 +26,5 @@ export class TrunkHubByoStack extends cdk.Stack {
         },
       ],
     });
-
   }
 }
