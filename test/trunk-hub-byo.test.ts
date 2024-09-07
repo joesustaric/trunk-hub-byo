@@ -2,13 +2,15 @@ import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import * as TrunkHubByo from '../lib/trunk-hub-vpc-stack';
 
-test('VPC is created with correct properties', () => {
+test('VPC is created with expected resources', () => {
 	// Given
 	const app = new cdk.App();
+
 	// WHEN
 	const stack = new TrunkHubByo.TrunkHubVPCStack(app, 'MyTestStack', {
 		vpcCidr: '10.0.0.0/16',
 	});
+
   	// THEN
 	const template = Template.fromStack(stack);
 
@@ -50,8 +52,37 @@ test('VPC is created with correct properties', () => {
 	Tags: [
 		{
 			Key: 'Name',
-			Value: 'MyTestStack/TrunkHubCDKVpc',
+			Value: 'MyTestStack/trunk-hub-vpc',
 		},
 	],
+	});
+});
+
+test('VPC is created with the stack correct outputs', () => {
+	// Given
+	const app = new cdk.App();
+
+	// WHEN
+	const stack = new TrunkHubByo.TrunkHubVPCStack(app, 'MyTestStack', {
+		vpcCidr: '10.0.0.0/16',
+	});
+
+	// THEN
+	const template = Template.fromStack(stack);
+
+	// Assert that the public subnet IDs are output
+	template.hasOutput('PublicSubnet1', {
+		Description: 'ID of public subnet 1',
+	});
+	template.hasOutput('PublicSubnet2', {
+		Description: 'ID of public subnet 2',
+	});
+
+	// Assert that the private subnet IDs are output
+	template.hasOutput('PrivateSubnet1', {
+		Description: 'ID of private subnet 1',
+	});
+	template.hasOutput('PrivateSubnet2', {
+		Description: 'ID of private subnet 2',
 	});
 });
