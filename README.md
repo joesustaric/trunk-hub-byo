@@ -4,6 +4,10 @@ This is a blank project for CDK development with TypeScript.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
+## Changelog
+This project uses a CHANGELOG.md file to keep track of changes.
+Based on the [Keep a Changelog](https://keepachangelog.com) format.
+
 ## Useful commands
 
 * `npx cdk bootstrap aws://<acc-number>/<region>` bootstrap
