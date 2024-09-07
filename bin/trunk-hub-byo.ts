@@ -33,9 +33,15 @@ const prodTags = {
 };
 
 // Instantiate the stack for the dev environment
-const devStack = new TrunkHubByoStack(app, 'TrunkHubByoStackDev', { env: devEnv });
+const devStack = new TrunkHubByoStack(app, 'TrunkHubByoStackDev', {
+  env: devEnv,
+  vpcCidr: '10.0.0.0/16',
+});
 applyTags(devStack, devTags);
 
 // Instantiate the stack for the prod environment
-const prodStack = new TrunkHubByoStack(app, 'TrunkHubByoStackProd', { env: prodEnv });
+const prodStack = new TrunkHubByoStack(app, 'TrunkHubByoStackProd', {
+  env: prodEnv,
+  vpcCidr: '10.0.0.0/16',
+});
 applyTags(prodStack, prodTags);

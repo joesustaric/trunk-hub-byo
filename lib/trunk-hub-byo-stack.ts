@@ -2,6 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 
+interface TrunkHubByoStackProps extends cdk.StackProps {
+  vpcCidr: string;
+}
 export class TrunkHubByoStack extends cdk.Stack {
   /**
    *
@@ -9,10 +12,11 @@ export class TrunkHubByoStack extends cdk.Stack {
    * @param {string} id
    * @param {cdk.StackProps=} props
    */
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: TrunkHubByoStackProps) {
     super(scope, id, props);
 
     const vpc = new ec2.Vpc(this, 'TrunkHubCDKVpc', {
+      ipAddresses: ec2.IpAddresses.cidr(props.vpcCidr),
       maxAzs: 2, // Default is all AZs in the region
       subnetConfiguration: [
         {
