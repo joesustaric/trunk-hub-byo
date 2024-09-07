@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { TrunkHubByoStack } from '../lib/trunk-hub-byo-stack';
+import { TrunkHubVPCStack } from '../lib/trunk-hub-vpc-stack';
 import { Tags } from 'aws-cdk-lib';
 
 const app = new cdk.App();
@@ -19,28 +19,29 @@ function applyTags(stack: cdk.Stack, tags: { [key: string]: string }) {
 
 // Tags for dev and prod environments
 const commonTags = {
-  system: 'TrunkHubByoVPC',
+  system: 'trunk-hub',
+  'test:foo': 'bar'
 };
 
 const devTags = {
   ...commonTags,
-  environment: 'development',
+  environment: 'dev',
 };
 
 const prodTags = {
   ...commonTags,
-  environment: 'production',
+  environment: 'prod',
 };
 
 // Instantiate the stack for the dev environment
-const devStack = new TrunkHubByoStack(app, 'TrunkHubByoStackDev', {
+const devStack = new TrunkHubVPCStack(app, 'trunk-hub-vpc-dev', {
   env: devEnv,
   vpcCidr: '10.0.0.0/16',
 });
 applyTags(devStack, devTags);
 
 // Instantiate the stack for the prod environment
-const prodStack = new TrunkHubByoStack(app, 'TrunkHubByoStackProd', {
+const prodStack = new TrunkHubVPCStack(app, 'trunk-hub-vpc-prod', {
   env: prodEnv,
   vpcCidr: '10.0.0.0/16',
 });

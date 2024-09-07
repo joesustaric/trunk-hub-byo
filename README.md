@@ -6,7 +6,8 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 ## Useful commands
 
-* `npx cdk bootstrap aws://acc-number/region` bootstrap
+* `npx cdk bootstrap aws://<acc-number>/<region>` bootstrap
+* `npx cdk list`    list stacks
 * `npm run build`   compile typescript to js
 * `npm run watch`   watch for changes and compile
 * `npm run test`    perform the jest unit tests
@@ -14,6 +15,17 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
 
+### Security
+
+Using `checkov` for security scanning.
+
+```bash
+# Install checkov
+brew install checkov
+# Run checkov
+checkov
+```
+There is a configuration file in the root of the project with all the options for checkov to run.
 
 
 ## Recording ADRS
