@@ -31,7 +31,7 @@ test('VPC is created with expected resources', () => {
 	 // Find and count private subnets
 	const privateSubnets = template.findResources('AWS::EC2::Subnet', {
         Properties: {
-            MapPublicIpOnLaunch: false,
+			MapPublicIpOnLaunch:  false,
         },
     });
     expect(Object.keys(privateSubnets).length).toBe(2);
