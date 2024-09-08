@@ -27,6 +27,12 @@ export class TrunkHubVPCStack extends cdk.Stack {
       ],
     });
 
+    // Output the VPC ID
+    new cdk.CfnOutput(this, 'VpcId', {
+      value: vpc.vpcId,
+      description: 'ID of the VPC',
+    });
+
     // Output the ARNs of the public subnets
     vpc.publicSubnets.forEach((subnet, index) => {
       new cdk.CfnOutput(this, `PublicSubnet${index + 1}`, {

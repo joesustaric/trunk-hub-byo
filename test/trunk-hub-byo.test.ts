@@ -70,6 +70,11 @@ test('VPC is created with the stack correct outputs', () => {
 	// THEN
 	const template = Template.fromStack(stack);
 
+	// Assert that the VPC ID is in the output
+	template.hasOutput('VpcId', {
+		Description: 'ID of the VPC',
+	});
+
 	// Assert that the public subnet IDs are output
 	template.hasOutput('PublicSubnet1', {
 		Description: 'ID of public subnet 1',
