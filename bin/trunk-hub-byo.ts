@@ -2,6 +2,7 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { TrunkHubVPCStack } from '../lib/trunk-hub-vpc-stack';
+import { TrunkHubAppStack } from '../lib/trunk-hub-app-stack';
 import { Tags } from 'aws-cdk-lib';
 
 const app = new cdk.App();
@@ -33,6 +34,8 @@ const prodTags = {
   environment: 'prod',
 };
 
+// VPC
+
 // Instantiate the stack for the dev environment
 const devStack = new TrunkHubVPCStack(app, 'trunk-hub-vpc-dev', {
   env: devEnv,
@@ -48,3 +51,21 @@ const prodStack = new TrunkHubVPCStack(app, 'trunk-hub-vpc-prod', {
   description: 'Prod environment VPC stack for TrunkHub',
 });
 applyTags(prodStack, prodTags);
+
+// APP
+
+// Instantiate the stack for the dev environment
+const devAppStack = new TrunkHubAppStack(app, 'trunk-hub-app-dev', {
+  vpcStackName: 'trunk-hub-vpc-dev'
+});
+applyTags(devAppStack, devTags);
+
+// Instantiate the stack for the prod environment
+const prodAppStack = new TrunkHubAppStack(app, 'trunk-hub-app-prod', {
+  vpcStackName: 'trunk-hub-vpc-prod'
+});
+applyTags(prodAppStack, devTags);
+
+//Ack Warnings
+cdk.Annotations.of(devAppStack).acknowledgeWarning("@aws-cdk/aws-ec2:noSubnetRouteTableId");
+cdk.Annotations.of(prodAppStack).acknowledgeWarning("@aws-cdk/aws-ec2:noSubnetRouteTableId");

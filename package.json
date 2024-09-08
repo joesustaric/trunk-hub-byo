@@ -6,9 +6,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w",
+    "cdk": "cdk",
+    "lint:fix": "eslint . --fix",
+    "lint": "eslint .",
     "test": "jest",
-    "cdk": "cdk"
+    "watch": "tsc -w"
   },
   "devDependencies": {
     "@eslint/js": "^9.10.0",

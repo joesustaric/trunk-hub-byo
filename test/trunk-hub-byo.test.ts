@@ -56,6 +56,14 @@ test('VPC is created with expected resources', () => {
 		},
 	],
 	});
+
+	// Assert that the az's are outputted
+	template.hasOutput('PublicSubnet1', {
+		Description: 'ID of public subnet 1',
+	});
+	template.hasOutput('PublicSubnet2', {
+		Description: 'ID of public subnet 2',
+	});
 });
 
 test('VPC is created with the stack correct outputs', () => {
