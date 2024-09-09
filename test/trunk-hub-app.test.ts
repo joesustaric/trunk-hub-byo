@@ -25,7 +25,7 @@ test('App Server Config is correct', () => {
             }),
             Match.objectLike({
                 Key: 'access_logs.s3.bucket',
-                Value: Match.anyValue(), // You can specify the exact bucket name if needed
+                Value: Match.anyValue(),
             }),
         ]),
     });

@@ -26,7 +26,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         });
 
         // Create an Application Load Balancer
-        const alb = new elbv2.ApplicationLoadBalancer(this, 'trunk-hub-alb', {
+        const alb = new elbv2.ApplicationLoadBalancer(this, 'app-alb', {
             vpc,
             internetFacing: true,
             vpcSubnets: {
@@ -37,7 +37,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             },
         });
         // Create an S3 bucket for ALB logs
-        const albLogBucket = new s3.Bucket(this, 'trunk-hub-alb-logs', {
+        const albLogBucket = new s3.Bucket(this, 'alb-logs', {
             autoDeleteObjects: true,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             lifecycleRules: [
