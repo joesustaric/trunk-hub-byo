@@ -36,19 +36,6 @@ export class TrunkHubAppStack extends cdk.Stack {
                 ],
             },
         });
-        // Access the underlying CfnLoadBalancer resource
-        const cfnAlb = alb.node.defaultChild as elbv2.CfnLoadBalancer;
-        // Set the LoadBalancerAttributes
-        cfnAlb.loadBalancerAttributes = [
-            {
-                key: 'access_logs.s3.enabled',
-                value: 'true',
-            },
-            {
-                key: 'routing.http.drop_invalid_header_fields.enabled',
-                value: 'true',
-            },
-        ];
         // Create an S3 bucket for ALB logs
         const albLogBucket = new s3.Bucket(this, 'trunk-hub-alb-logs', {
             autoDeleteObjects: true,
@@ -61,6 +48,24 @@ export class TrunkHubAppStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             versioned: true,
         });
+        // Access the underlying CfnLoadBalancer resource
+        const cfnAlb = alb.node.defaultChild as elbv2.CfnLoadBalancer;
+        // Set the LoadBalancerAttributes
+        cfnAlb.loadBalancerAttributes = [
+            {
+                key: 'access_logs.s3.bucket',
+                value: albLogBucket.bucketName,
+            },
+            {
+                key: 'access_logs.s3.enabled',
+                value: 'true',
+            },
+            {
+                key: 'routing.http.drop_invalid_header_fields.enabled',
+                value: 'true',
+            },
+        ];
+
         // Enable access logging for the ALB
         alb.logAccessLogs(albLogBucket);
     }
