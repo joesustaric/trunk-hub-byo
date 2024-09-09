@@ -1,8 +1,9 @@
-# Welcome to your CDK TypeScript project
+# TrunkHub CDK
 
-This is a blank project for CDK development with TypeScript.
+Build a run your own Git Server in the cloud that does not accept PRs.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## TODOS
+- [ ] xx
 
 ## Changelog
 This project uses a CHANGELOG.md file to keep track of changes.
@@ -10,7 +11,7 @@ Based on the [Keep a Changelog](https://keepachangelog.com) format.
 
 ## Useful commands
 
-* `npx cdk bootstrap aws://<acc-number>/<region>` bootstrap
+* `npx cdk bootstrap aws://<acc-number>/<region>` cdk bootstrap
 * `npx cdk list`    list stacks
 * `npm run build`   compile typescript to js
 * `npm run watch`   watch for changes and compile
@@ -19,7 +20,7 @@ Based on the [Keep a Changelog](https://keepachangelog.com) format.
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
 
-### Security
+## Security
 
 Using `checkov` for security scanning.
 
@@ -30,6 +31,15 @@ brew install checkov
 checkov
 ```
 There is a configuration file in the root of the project with all the options for checkov to run.
+
+### Handy checkov commands
+
+Create baseline, the file will do into `cdk.out` directory.
+The checkov configuration file points to the `.checkov.baseline` file in the root of the project.
+
+```bash
+checkov --create-baseline --output-baseline-as-skipped -d cdk.out
+```
 
 ## Recording ADRS
 

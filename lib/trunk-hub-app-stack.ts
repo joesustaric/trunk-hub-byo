@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 
 interface TrunkHubAppStackProps extends cdk.StackProps {
     vpcStackName: string;
@@ -25,8 +26,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         });
 
         // Create an Application Load Balancer
-        // TODO: ALB Logs to and s3 Bucket
-        new elbv2.ApplicationLoadBalancer(this, 'trunk-hub-alb', {
+        const alb = new elbv2.ApplicationLoadBalancer(this, 'trunk-hub-alb', {
             vpc,
             internetFacing: true,
             vpcSubnets: {
@@ -36,35 +36,32 @@ export class TrunkHubAppStack extends cdk.Stack {
                 ],
             },
         });
-
-        // Create a security group
-        // const securityGroup = new ec2.SecurityGroup(this, 'SecurityGroup', {
-        //     vpc,
-        //     description: 'Allow HTTPS and Git protocol traffic',
-        //     allowAllOutbound: true,
-        // });
-        // Add ingress rules for IPv4
-        // securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'Allow HTTPS traffic for Git commands');
-        // securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9418), 'Allow Git protocol traffic');
-
-        // Add ingress rules for IPv6
-        // securityGroup.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(443), 'Allow HTTPS traffic for Git commands');
-        // securityGroup.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(9418), 'Allow Git protocol traffic');
-
-        // Create an Auto Scaling Group with two instances
-        // const asg = new autoscaling.AutoScalingGroup(this, 'ASG', {
-        //     vpc,
-        //     instanceType: new ec2.InstanceType('t2.micro'),
-        //     machineImage: new ec2.AmazonLinuxImage(),
-        //     minCapacity: 2,
-        //     maxCapacity: 2,
-        //     vpcSubnets: {
-        //         subnets: [
-        //             ec2.Subnet.fromSubnetId(this, 'PublicSubnet1', publicSubnet1),
-        //             ec2.Subnet.fromSubnetId(this, 'PublicSubnet2', publicSubnet2),
-        //         ],
-        //     },
-        //     securityGroup: securityGroup,
-        // });
+        // Access the underlying CfnLoadBalancer resource
+        const cfnAlb = alb.node.defaultChild as elbv2.CfnLoadBalancer;
+        // Set the LoadBalancerAttributes
+        cfnAlb.loadBalancerAttributes = [
+            {
+                key: 'access_logs.s3.enabled',
+                value: 'true',
+            },
+            {
+                key: 'routing.http.drop_invalid_header_fields.enabled',
+                value: 'true',
+            },
+        ];
+        // Create an S3 bucket for ALB logs
+        const albLogBucket = new s3.Bucket(this, 'trunk-hub-alb-logs', {
+            autoDeleteObjects: true,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            lifecycleRules: [
+                {
+                    expiration: cdk.Duration.days(60),
+                },
+            ],
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            versioned: true,
+        });
+        // Enable access logging for the ALB
+        alb.logAccessLogs(albLogBucket);
     }
 }

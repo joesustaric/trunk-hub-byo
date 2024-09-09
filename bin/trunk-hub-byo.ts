@@ -56,15 +56,17 @@ applyTags(prodStack, prodTags);
 
 // Instantiate the stack for the dev environment
 const devAppStack = new TrunkHubAppStack(app, 'trunk-hub-app-dev', {
-  vpcStackName: 'trunk-hub-vpc-dev'
+  vpcStackName: 'trunk-hub-vpc-dev',
+  env: devEnv
 });
 applyTags(devAppStack, devTags);
 
 // Instantiate the stack for the prod environment
 const prodAppStack = new TrunkHubAppStack(app, 'trunk-hub-app-prod', {
-  vpcStackName: 'trunk-hub-vpc-prod'
+  vpcStackName: 'trunk-hub-vpc-prod',
+  env: prodEnv
 });
-applyTags(prodAppStack, devTags);
+applyTags(prodAppStack, prodTags);
 
 //Ack Warnings
 cdk.Annotations.of(devAppStack).acknowledgeWarning("@aws-cdk/aws-ec2:noSubnetRouteTableId");
