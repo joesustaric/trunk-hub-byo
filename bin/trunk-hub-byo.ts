@@ -69,5 +69,7 @@ const prodAppStack = new TrunkHubAppStack(app, 'trunk-hub-app-prod', {
 applyTags(prodAppStack, prodTags);
 
 //Ack Warnings
-cdk.Annotations.of(devAppStack).acknowledgeWarning("@aws-cdk/aws-ec2:noSubnetRouteTableId");
 cdk.Annotations.of(prodAppStack).acknowledgeWarning("@aws-cdk/aws-ec2:noSubnetRouteTableId");
+cdk.Annotations.of(prodAppStack).acknowledgeWarning("@aws-cdk/aws-autoscaling:desiredCapacitySet")
+cdk.Annotations.of(devAppStack).acknowledgeWarning("@aws-cdk/aws-ec2:noSubnetRouteTableId");
+cdk.Annotations.of(devAppStack).acknowledgeWarning("@aws-cdk/aws-autoscaling:desiredCapacitySet")

@@ -1,9 +1,14 @@
 # TrunkHub CDK
 
 Build a run your own Git Server in the cloud that does not accept PRs.
+No web interface, just git.
 
 ## TODOS
-- [ ] xx
+- [ ] Code linting
+- [ ] ASG with 2 small Amazon Linux 2 instances
+- [ ] EFS for shared storage
+- [ ] Backup EFS to S3
+- [ ] Figure out how to do configure a push hook to trigger something
 
 ## Changelog
 This project uses a CHANGELOG.md file to keep track of changes.
@@ -34,11 +39,28 @@ There is a configuration file in the root of the project with all the options fo
 
 ### Handy checkov commands
 
+The configuration file should have all the options ready to go.
+
+Just run:
+
+```bash
+checkov
+```
+
+To trigger all the security checks.
+
 Create baseline, the file will do into `cdk.out` directory.
 The checkov configuration file points to the `.checkov.baseline` file in the root of the project.
 
 ```bash
 checkov --create-baseline --output-baseline-as-skipped -d cdk.out
+```
+## Skipping a check
+
+There is a `.checkov.skip` file in the root of the project that contains the checks that are skipped. You can regenerate the file by running the following command:
+
+```bash
+checkov --create-checkov-skip-file #recheck this
 ```
 
 ## Recording ADRS

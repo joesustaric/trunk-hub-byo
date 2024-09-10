@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 
 interface TrunkHubAppStackProps extends cdk.StackProps {
     vpcStackName: string;
@@ -15,6 +16,8 @@ export class TrunkHubAppStack extends cdk.Stack {
         const vpcId = cdk.Fn.importValue(`${props.vpcStackName}:VpcId`);
         const publicSubnet1 = cdk.Fn.importValue(`${props.vpcStackName}:PublicSubnet1`);
         const publicSubnet2 = cdk.Fn.importValue(`${props.vpcStackName}:PublicSubnet2`);
+        const privateSubnet1 = cdk.Fn.importValue(`${props.vpcStackName}:PrivateSubnet1`);
+        const privateSubnet2 = cdk.Fn.importValue(`${props.vpcStackName}:PrivateSubnet2`);
         const az1 = cdk.Fn.importValue(`${props.vpcStackName}:AvailabilityZone1`);
         const az2 = cdk.Fn.importValue(`${props.vpcStackName}:AvailabilityZone2`);
 
@@ -23,6 +26,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             vpcId: vpcId,
             availabilityZones: [az1, az2],
             publicSubnetIds: [publicSubnet1, publicSubnet2],
+            privateSubnetIds: [privateSubnet1, privateSubnet2]
         });
 
         // Create an Application Load Balancer
@@ -68,5 +72,39 @@ export class TrunkHubAppStack extends cdk.Stack {
 
         // Enable access logging for the ALB
         alb.logAccessLogs(albLogBucket);
+
+        // User data script to set up a web server
+        const userData = ec2.UserData.forLinux();
+        userData.addCommands(
+            'yum update -y',
+        );
+
+        // Create an Auto Scaling group
+        const autoScalingGroup = new autoscaling.AutoScalingGroup(this, 'AutoScalingGroup', {
+            desiredCapacity: 2,
+            instanceType: new ec2.InstanceType('t3.micro'),
+            machineImage: new ec2.AmazonLinuxImage(),
+            maxCapacity: 2,
+            minCapacity: 2,
+            userData: userData,
+            vpc,
+            vpcSubnets: {
+                subnets: vpc.publicSubnets,
+            },
+        });
+
+        // // Attach the Auto Scaling group to the ALB
+        // const listener = alb.addListener('Listener', {
+        //     port: 80,
+        //     open: true,
+        // });
+        // listener.addTargets('Targets', {
+        //     port: 80,
+        //     targets: [autoScalingGroup],
+        //     healthCheck: {
+        //         path: '/',
+        //         interval: cdk.Duration.minutes(1),
+        //     },
+        // });
     }
 }
