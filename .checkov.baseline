@@ -1,6 +1,32 @@
 {
     "failed_checks": [
         {
+            "file": "/TrunkHubByoStackDev.template.json",
+            "findings": [
+                {
+                    "resource": "AWS::Lambda::Function.CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
+                    "check_ids": [
+                        "CKV_AWS_115",
+                        "CKV_AWS_116",
+                        "CKV_AWS_117"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/TrunkHubByoStackProd.template.json",
+            "findings": [
+                {
+                    "resource": "AWS::Lambda::Function.CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
+                    "check_ids": [
+                        "CKV_AWS_115",
+                        "CKV_AWS_116",
+                        "CKV_AWS_117"
+                    ]
+                }
+            ]
+        },
+        {
             "file": "/trunk-hub-app-dev.template.json",
             "findings": [
                 {
@@ -12,7 +38,7 @@
                     ]
                 },
                 {
-                    "resource": "AWS::S3::Bucket.trunkhubalblogs0BB25BB5",
+                    "resource": "AWS::S3::Bucket.alblogsDA4C705D",
                     "check_ids": [
                         "CKV_AWS_18"
                     ]
@@ -31,7 +57,7 @@
                     ]
                 },
                 {
-                    "resource": "AWS::S3::Bucket.trunkhubalblogs0BB25BB5",
+                    "resource": "AWS::S3::Bucket.alblogsDA4C705D",
                     "check_ids": [
                         "CKV_AWS_18"
                     ]
