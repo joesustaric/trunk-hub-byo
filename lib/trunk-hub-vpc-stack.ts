@@ -30,6 +30,19 @@ export class TrunkHubVPCStack extends cdk.Stack {
       availabilityZones: availabilityZones,
     });
 
+      // Add EC2 Instance Connect endpoint using EC2 service endpoint
+      vpc.addInterfaceEndpoint('Ec2InstanceConnectEndpoint', {
+        service: ec2.InterfaceVpcEndpointAwsService.EC2,
+        subnets: {
+          availabilityZones: availabilityZones,
+          subnets: [
+            vpc.publicSubnets[0], // First public subnet
+            vpc.privateSubnets[1] // First private subnet
+          ],
+        },
+        privateDnsEnabled: true,
+      });
+
     // Output the availability zones as individual parameters
     availabilityZones.forEach((az, index) => {
       new cdk.CfnOutput(this, `AvailabilityZone${index + 1}`, {
