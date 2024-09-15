@@ -57,6 +57,7 @@ applyTags(prodStack, prodTags);
 // Instantiate the stack for the dev environment
 const devAppStack = new TrunkHubAppStack(app, 'trunk-hub-app-dev', {
   vpcStackName: 'trunk-hub-vpc-dev',
+  description: 'Dev environment stack for TrunkHub App',
   env: devEnv
 });
 applyTags(devAppStack, devTags);
@@ -64,6 +65,7 @@ applyTags(devAppStack, devTags);
 // Instantiate the stack for the prod environment
 const prodAppStack = new TrunkHubAppStack(app, 'trunk-hub-app-prod', {
   vpcStackName: 'trunk-hub-vpc-prod',
+  description: 'Prod environment stack for TrunkHub App',
   env: prodEnv
 });
 applyTags(prodAppStack, prodTags);
