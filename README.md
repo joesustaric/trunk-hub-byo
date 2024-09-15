@@ -5,8 +5,6 @@ No web interface, just git.
 
 ## TODOS
 - [ ] Code linting
-- [ ] Figure out EC2 Instance Connect configuration
-- [ ] ASG with 2 small Amazon Linux 2 instances
 - [ ] EFS for shared storage
 - [ ] Backup EFS to S3
 - [ ] Figure out how to do configure a push hook to trigger something
