@@ -4,6 +4,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 interface TrunkHubAppStackProps extends cdk.StackProps {
     vpcStackName: string;
@@ -13,6 +14,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         super(scope, id, props);
 
         //Import values needed from VPC Stack Outputs
+        //TODO: or pass these in?
         const vpcId = cdk.Fn.importValue(`${props.vpcStackName}:VpcId`);
         const publicSubnet1 = cdk.Fn.importValue(`${props.vpcStackName}:PublicSubnet1`);
         const publicSubnet2 = cdk.Fn.importValue(`${props.vpcStackName}:PublicSubnet2`);
@@ -40,6 +42,7 @@ export class TrunkHubAppStack extends cdk.Stack {
                 ],
             },
         });
+
         // Create an S3 bucket for ALB logs
         const albLogBucket = new s3.Bucket(this, 'alb-logs', {
             autoDeleteObjects: true,
@@ -52,59 +55,87 @@ export class TrunkHubAppStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             versioned: true,
         });
-        // Access the underlying CfnLoadBalancer resource
-        const cfnAlb = alb.node.defaultChild as elbv2.CfnLoadBalancer;
-        // Set the LoadBalancerAttributes
-        cfnAlb.loadBalancerAttributes = [
-            {
-                key: 'access_logs.s3.bucket',
-                value: albLogBucket.bucketName,
-            },
-            {
-                key: 'access_logs.s3.enabled',
-                value: 'true',
-            },
-            {
-                key: 'routing.http.drop_invalid_header_fields.enabled',
-                value: 'true',
-            },
-        ];
+
+        // Set alb attributes
+        alb.setAttribute('access_logs.s3.bucket', albLogBucket.bucketName)
+        alb.setAttribute('access_logs.s3.enabled', 'true')
+        alb.setAttribute('routing.http.drop_invalid_header_fields.enabled', 'true')
 
         // Enable access logging for the ALB
         alb.logAccessLogs(albLogBucket);
+
+        // Create an IAM role for EC2 Instance Connect
+        const ec2InstanceConnectRole = new iam.Role(this, 'EC2InstanceConnectRole', {
+            assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+            managedPolicies: [
+            iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
+            iam.ManagedPolicy.fromAwsManagedPolicyName('EC2InstanceConnect')
+            ],
+        });
+
+        const securityGroup = new ec2.SecurityGroup(this, 'InstanceSecurityGroup', {
+            vpc,
+            allowAllOutbound: true,
+        });
+        securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'Allow SSH access');
+        securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'Allow http access');
 
         // User data script to set up a web server
         const userData = ec2.UserData.forLinux();
         userData.addCommands(
             'yum update -y',
+            'yum install -y httpd',
+            'systemctl enable httpd',
+            'systemctl start httpd'
         );
 
         // Create an Auto Scaling group
         const autoScalingGroup = new autoscaling.AutoScalingGroup(this, 'AutoScalingGroup', {
             desiredCapacity: 2,
-            instanceType: new ec2.InstanceType('t3.micro'),
-            machineImage: new ec2.AmazonLinuxImage(),
+
+            instanceType: new ec2.InstanceType('t4g.micro'),
+            machineImage: new ec2.AmazonLinuxImage({
+                cpuType: ec2.AmazonLinuxCpuType.ARM_64,
+                edition: ec2.AmazonLinuxEdition.STANDARD,
+                generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
+                storage: ec2.AmazonLinuxStorage.GENERAL_PURPOSE,
+                virtualization: ec2.AmazonLinuxVirt.HVM,
+            }),
             maxCapacity: 2,
             minCapacity: 2,
+            role: ec2InstanceConnectRole,
             userData: userData,
             vpc,
             vpcSubnets: {
                 subnets: vpc.publicSubnets,
             },
+            blockDevices: [
+                {
+                    deviceName: '/dev/xvda', // Root volume
+                    volume: autoscaling.BlockDeviceVolume.ebs(8, { // 8 GiB gp3 volume
+                        volumeType: autoscaling.EbsDeviceVolumeType.GP3,
+                        encrypted: true,
+                        deleteOnTermination: true,
+                    }),
+                },
+            ],
         });
 
+        // Attach the security group to the Auto Scaling Group
+        autoScalingGroup.addSecurityGroup(securityGroup);
+
         // // Attach the Auto Scaling group to the ALB
-        // const listener = alb.addListener('Listener', {
-        //     port: 80,
-        //     open: true,
-        // });
-        // listener.addTargets('Targets', {
-        //     port: 80,
-        //     targets: [autoScalingGroup],
-        //     healthCheck: {
-        //         path: '/',
-        //         interval: cdk.Duration.minutes(1),
-        //     },
-        // });
+        const listener = alb.addListener('Listener', {
+            port: 80,
+            open: true,
+        });
+        listener.addTargets('Targets', {
+            port: 80,
+            targets: [autoScalingGroup],
+            healthCheck: {
+                path: '/',
+                interval: cdk.Duration.minutes(1),
+            },
+        });
     }
 }
