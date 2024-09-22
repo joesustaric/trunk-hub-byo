@@ -5,6 +5,8 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import { applyCheckovSkips } from './exceptions/trunk-hub-app-stack-ex';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -34,6 +36,19 @@ export class TrunkHubAppStack extends cdk.Stack {
             vpcId: vpcId,
         });
 
+        const kmsKey = new kms.Key(this, 'app-kms-key', {
+            enableKeyRotation: true,
+            alias: 'trunk-hub-app-key',
+            description: 'KMS key to encrypt things',
+        });
+
+        // Create a Secret Store Parameter and read in the private key
+        const sshPrivateKeySecret = new secretsmanager.Secret(this, 'app-private-ssh-key', {
+            secretName: 'trunk-hub-app-ssh-key',
+            description: 'Private key for SSH access',
+            encryptionKey: kmsKey,
+        });
+
         // Create a Network Load Balancer
         const nlb = new elbv2.NetworkLoadBalancer(this, 'app-nlb', {
             vpc,
@@ -46,7 +61,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             },
         });
 
-        // Create an S3 bucket for ALB logs
+        // Create an S3 bucket for NLB logs
         const nlbLogBucket = new s3.Bucket(this, 'nlb-logs', {
             autoDeleteObjects: true,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -68,13 +83,15 @@ export class TrunkHubAppStack extends cdk.Stack {
         nlb.setAttribute('access_logs.s3.enabled', 'true')
 
         // Create an IAM role for EC2 Instance Connect
-        const ec2InstanceConnectRole = new iam.Role(this, 'ec2-instance-connect-role', {
+        const ec2InstanceRole = new iam.Role(this, 'ec2-instance-connect-role', {
             assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
             managedPolicies: [
                 iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
                 iam.ManagedPolicy.fromAwsManagedPolicyName('EC2InstanceConnect')
             ],
         });
+
+        sshPrivateKeySecret.grantRead(ec2InstanceRole);
 
         const securityGroup = new ec2.SecurityGroup(this, 'instance-security-group', {
             allowAllOutbound: true,
@@ -84,7 +101,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'Allow SSH access'
         );
 
-        // User data script to set up a web server
+        // User data script to set up the server
         const userData = ec2.UserData.forLinux();
         const userDataScript = fs.readFileSync(path.join(__dirname, 'user-data/app.sh'), 'utf8');
         userData.addCommands(userDataScript);
@@ -111,7 +128,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             }),
             maxCapacity: 2,
             minCapacity: 2,
-            role: ec2InstanceConnectRole,
+            role: ec2InstanceRole,
             securityGroup: securityGroup,
             requireImdsv2: true,
             userData: userData,
