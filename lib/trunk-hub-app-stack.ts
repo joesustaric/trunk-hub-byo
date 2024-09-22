@@ -5,6 +5,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as efs from 'aws-cdk-lib/aws-efs';
 
 interface TrunkHubAppStackProps extends cdk.StackProps {
     vpcStackName: string;
@@ -109,7 +110,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             sudo chown -R git:git /home/git/.ssh
             sudo runuser -l git -c 'touch .ssh/authorized_keys && chmod 600 .ssh/authorized_keys'
             sudo runuser -l git -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3OuNRLfCK3upvG6JKmDAlnsl6x4bxkCnKQbrIt7+uk joe@emaill.com" >> ~/.ssh/authorized_keys'
-            
+
 
             # Set up a bare Git repository
             # TODO: mot master branch
@@ -144,6 +145,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             minCapacity: 2,
             role: ec2InstanceConnectRole,
             securityGroup: securityGroup,
+            requireImdsv2: true,
             userData: userData,
             vpc,
             vpcSubnets: {
@@ -173,5 +175,18 @@ export class TrunkHubAppStack extends cdk.Stack {
             protocol: elbv2.Protocol.TCP,
             defaultTargetGroups: [sshTargetGroup],
         });
+
+        // Checkov Security exceptions with reasons
+        const cfnSecurityGroup = securityGroup.node.defaultChild as ec2.CfnSecurityGroup;
+        cfnSecurityGroup.cfnOptions.metadata = {
+            'checkov': {
+                'skip': [
+                    {
+                        'id': 'CKV_AWS_24',
+                        'comment': 'This project allows git over ssh'
+                    },
+                ]
+            }
+        }
     }
 }
