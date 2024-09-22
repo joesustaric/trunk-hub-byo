@@ -14,7 +14,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         super(scope, id, props);
 
         //Import values needed from VPC Stack Outputs
-        //TODO: or pass these in?
+        //TODO: or pass these in from existing VPC
         const az1 = cdk.Fn.importValue(`${props.vpcStackName}:AvailabilityZone1`);
         const az2 = cdk.Fn.importValue(`${props.vpcStackName}:AvailabilityZone2`);
         const privateSubnet1 = cdk.Fn.importValue(`${props.vpcStackName}:PrivateSubnet1`);
@@ -31,20 +31,20 @@ export class TrunkHubAppStack extends cdk.Stack {
             vpcId: vpcId,
         });
 
-        // Create an Application Load Balancer
-        const alb = new elbv2.ApplicationLoadBalancer(this, 'app-alb', {
+        // Create a Network Load Balancer
+        const nlb = new elbv2.NetworkLoadBalancer(this, 'app-nlb', {
             vpc,
             internetFacing: true,
             vpcSubnets: {
-                subnets: [
-                    ec2.Subnet.fromSubnetId(this, 'PublicSubnet1', publicSubnet1),
-                    ec2.Subnet.fromSubnetId(this, 'PublicSubnet2', publicSubnet2),
-                ],
+            subnets: [
+                ec2.Subnet.fromSubnetId(this, 'PublicSubnet1', publicSubnet1),
+                ec2.Subnet.fromSubnetId(this, 'PublicSubnet2', publicSubnet2),
+            ],
             },
         });
 
         // Create an S3 bucket for ALB logs
-        const albLogBucket = new s3.Bucket(this, 'alb-logs', {
+        const nlbLogBucket = new s3.Bucket(this, 'alb-logs', {
             autoDeleteObjects: true,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             lifecycleRules: [
@@ -56,16 +56,16 @@ export class TrunkHubAppStack extends cdk.Stack {
             versioned: true,
         });
 
-        // Set alb attributes
-        alb.setAttribute('access_logs.s3.bucket', albLogBucket.bucketName)
-        alb.setAttribute('access_logs.s3.enabled', 'true')
-        alb.setAttribute('routing.http.drop_invalid_header_fields.enabled', 'true')
+        // Enable access logging for the NLB
+        nlb.logAccessLogs(nlbLogBucket);
 
-        // Enable access logging for the ALB
-        alb.logAccessLogs(albLogBucket);
+        // Set nlb attributes
+        nlb.setAttribute('load_balancing.cross_zone.enabled', 'true')
+        nlb.setAttribute('access_logs.s3.bucket', nlbLogBucket.bucketName)
+        nlb.setAttribute('access_logs.s3.enabled', 'true')
 
         // Create an IAM role for EC2 Instance Connect
-        const ec2InstanceConnectRole = new iam.Role(this, 'EC2InstanceConnectRole', {
+        const ec2InstanceConnectRole = new iam.Role(this, 'ec2-instance-connect-role', {
             assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
             managedPolicies: [
                 iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
@@ -73,28 +73,55 @@ export class TrunkHubAppStack extends cdk.Stack {
             ],
         });
 
-        const securityGroup = new ec2.SecurityGroup(this, 'InstanceSecurityGroup', {
+        const securityGroup = new ec2.SecurityGroup(this, 'instance-security-group', {
             allowAllOutbound: true,
             vpc,
         });
         securityGroup.addIngressRule(
             ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'Allow SSH access'
         );
-        securityGroup.addIngressRule(
-            ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'Allow http access'
-        );
 
         // User data script to set up a web server
         const userData = ec2.UserData.forLinux();
-        userData.addCommands(
-            'yum update -y',
-            'yum install -y httpd',
-            'systemctl enable httpd',
-            'systemctl start httpd',
-        );
+        userData.addCommands(`
+            #!/bin/bash
+            set -e
+
+            yum update -y
+            yum install -y httpd git
+            systemctl enable httpd
+            echo "<html><body><h1>It works.</h1></body></html>" > /var/www/html/index.html
+            systemctl start httpd
+
+            echo "Creating user 'git'..."
+            sudo adduser git
+
+            sudo mkdir -p /srv/git
+            sudo chown -R git:git /srv/git
+
+            # Switch to the 'git' user
+            sudo su git
+            cd /home/git
+
+            # Set up SSH directory and authorized keys
+            echo "Setting up SSH directory and authorized keys..."
+            mkdir -p .ssh && chmod 700 .ssh
+            sudo chown -R git:git /home/git/.ssh
+            sudo runuser -l git -c 'touch .ssh/authorized_keys && chmod 600 .ssh/authorized_keys'
+            sudo runuser -l git -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3OuNRLfCK3upvG6JKmDAlnsl6x4bxkCnKQbrIt7+uk joe@emaill.com" >> ~/.ssh/authorized_keys'
+            
+
+            # Set up a bare Git repository
+            # TODO: mot master branch
+            echo "Setting up a bare Git repository..."
+            sudo runuser -l git -c 'mkdir -p /srv/git/trunk-hub-test.git'
+            sudo runuser -l git -c 'cd /srv/git/trunk-hub-test.git && git init --bare'
+
+            echo "User data script completed successfully."
+        `);
 
         // Create an Auto Scaling group
-        const autoScalingGroup = new autoscaling.AutoScalingGroup(this, 'AutoScalingGroup', {
+        const autoScalingGroup = new autoscaling.AutoScalingGroup(this, 'app-asg', {
             blockDevices: [{
                 deviceName: '/dev/xvda', // Root volume
                 volume: autoscaling.BlockDeviceVolume.ebs(8, {
@@ -104,6 +131,7 @@ export class TrunkHubAppStack extends cdk.Stack {
                 }),
             },],
             desiredCapacity: 2,
+            //TODO: make a parameter
             instanceType: new ec2.InstanceType('t4g.micro'),
             machineImage: new ec2.AmazonLinuxImage({
                 cpuType: ec2.AmazonLinuxCpuType.ARM_64,
@@ -123,19 +151,27 @@ export class TrunkHubAppStack extends cdk.Stack {
             },
         });
 
-        // // Attach the Auto Scaling group to the ALB
-        const listener = alb.addListener('Listener', {
-            port: 80,
-            open: true,
-        });
-        
-        listener.addTargets('Targets', {
-            port: 80,
+        // Create a target group for SSH
+        const sshTargetGroup = new elbv2.NetworkTargetGroup(this, 'ssh-target-group', {
+            vpc,
+            port: 22,
+            protocol: elbv2.Protocol.TCP,
             targets: [autoScalingGroup],
             healthCheck: {
-                path: '/',
-                interval: cdk.Duration.minutes(1),
+                port: '22',
+                protocol: elbv2.Protocol.TCP,
+                interval: cdk.Duration.seconds(20),
+                timeout: cdk.Duration.seconds(5),
+                healthyThresholdCount: 2,
+                unhealthyThresholdCount: 2,
             },
+        });
+
+        // Only listen on port 22 (git over ssh)
+        nlb.addListener('ssh-listener', {
+            port: 22,
+            protocol: elbv2.Protocol.TCP,
+            defaultTargetGroups: [sshTargetGroup],
         });
     }
 }
