@@ -5,7 +5,9 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as efs from 'aws-cdk-lib/aws-efs';
+import { applyCheckovSkips } from './exceptions/trunk-hub-app-stack-ex';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface TrunkHubAppStackProps extends cdk.StackProps {
     vpcStackName: string;
@@ -45,7 +47,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         });
 
         // Create an S3 bucket for ALB logs
-        const nlbLogBucket = new s3.Bucket(this, 'alb-logs', {
+        const nlbLogBucket = new s3.Bucket(this, 'nlb-logs', {
             autoDeleteObjects: true,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             lifecycleRules: [
@@ -84,42 +86,8 @@ export class TrunkHubAppStack extends cdk.Stack {
 
         // User data script to set up a web server
         const userData = ec2.UserData.forLinux();
-        userData.addCommands(`
-            #!/bin/bash
-            set -e
-
-            yum update -y
-            yum install -y httpd git
-            systemctl enable httpd
-            echo "<html><body><h1>It works.</h1></body></html>" > /var/www/html/index.html
-            systemctl start httpd
-
-            echo "Creating user 'git'..."
-            sudo adduser git
-
-            sudo mkdir -p /srv/git
-            sudo chown -R git:git /srv/git
-
-            # Switch to the 'git' user
-            sudo su git
-            cd /home/git
-
-            # Set up SSH directory and authorized keys
-            echo "Setting up SSH directory and authorized keys..."
-            mkdir -p .ssh && chmod 700 .ssh
-            sudo chown -R git:git /home/git/.ssh
-            sudo runuser -l git -c 'touch .ssh/authorized_keys && chmod 600 .ssh/authorized_keys'
-            sudo runuser -l git -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3OuNRLfCK3upvG6JKmDAlnsl6x4bxkCnKQbrIt7+uk joe@emaill.com" >> ~/.ssh/authorized_keys'
-
-
-            # Set up a bare Git repository
-            # TODO: mot master branch
-            echo "Setting up a bare Git repository..."
-            sudo runuser -l git -c 'mkdir -p /srv/git/trunk-hub-test.git'
-            sudo runuser -l git -c 'cd /srv/git/trunk-hub-test.git && git init --bare'
-
-            echo "User data script completed successfully."
-        `);
+        const userDataScript = fs.readFileSync(path.join(__dirname, 'user-data/app.sh'), 'utf8');
+        userData.addCommands(userDataScript);
 
         // Create an Auto Scaling group
         const autoScalingGroup = new autoscaling.AutoScalingGroup(this, 'app-asg', {
@@ -176,17 +144,6 @@ export class TrunkHubAppStack extends cdk.Stack {
             defaultTargetGroups: [sshTargetGroup],
         });
 
-        // Checkov Security exceptions with reasons
-        const cfnSecurityGroup = securityGroup.node.defaultChild as ec2.CfnSecurityGroup;
-        cfnSecurityGroup.cfnOptions.metadata = {
-            'checkov': {
-                'skip': [
-                    {
-                        'id': 'CKV_AWS_24',
-                        'comment': 'This project allows git over ssh'
-                    },
-                ]
-            }
-        }
+        applyCheckovSkips(securityGroup, nlbLogBucket)
     }
 }

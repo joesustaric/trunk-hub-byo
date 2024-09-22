@@ -55,12 +55,6 @@
                         "CKV_AWS_116",
                         "CKV_AWS_117"
                     ]
-                },
-                {
-                    "resource": "AWS::S3::Bucket.alblogsDA4C705D",
-                    "check_ids": [
-                        "CKV_AWS_18"
-                    ]
                 }
             ]
         },
