@@ -42,9 +42,47 @@ export class TrunkHubAppStack extends cdk.Stack {
             description: 'KMS key to encrypt things',
         });
 
-        // Create a Secret Store Parameter and read in the private key
-        const sshPrivateKeySecret = new secretsmanager.Secret(this, 'app-private-ssh-key', {
-            secretName: 'trunk-hub-app-ssh-key',
+        // SSM parameter for the rsa public key
+        new ssm.StringParameter(this, 'app-public-rsa-ssh-key', {
+            parameterName: '/trunk-hub/ssh/public-rsa-ssh-key',
+            stringValue: "replace me with a public rsa key",
+            description: 'Public key for SSH access',
+            tier: ssm.ParameterTier.STANDARD,
+        });
+
+        // SSM parameter for the ecdsa public key
+        new ssm.StringParameter(this, 'app-public-ecdsa-ssh-key', {
+            parameterName: '/trunk-hub/ssh/public-ecdsa-ssh-key',
+            stringValue: "replace me with a public ecdsa key",
+            description: 'Public key for SSH access',
+            tier: ssm.ParameterTier.STANDARD,
+        });
+
+        // SSM parameter for the ed25519 public key
+        new ssm.StringParameter(this, 'app-public-ed25519-ssh-key', {
+            parameterName: '/trunk-hub/ssh/public-ed25519-ssh-key',
+            stringValue: "replace me with a public ed25519 key",
+            description: 'Public key for SSH access',
+            tier: ssm.ParameterTier.STANDARD,
+        });
+
+        // Secret Store Parameter and read in the rsa private key
+        const sshRsaPrivateKeySecret = new secretsmanager.Secret(this, 'app-private-rsa-ssh-key', {
+            secretName: 'trunk-hub-app-rsa-ssh-key',
+            description: 'Private key for SSH access',
+            encryptionKey: kmsKey,
+        });
+
+        // Secret Store Parameter for ecdsa private key
+        const sshEcsdaPrivateKeySecret = new secretsmanager.Secret(this, 'app-private-ecdsa-ssh-key', {
+            secretName: 'trunk-hub-app-ecdsa-ssh-key',
+            description: 'Private key for SSH access',
+            encryptionKey: kmsKey,
+        });
+
+        // Secret Store Parameter and read in the private key
+        const sshEd25519PrivateKeySecret = new secretsmanager.Secret(this, 'app-private-ed25519-ssh-key', {
+            secretName: 'trunk-hub-app-ed25519-ssh-key',
             description: 'Private key for SSH access',
             encryptionKey: kmsKey,
         });
