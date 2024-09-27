@@ -10,7 +10,7 @@ export class TrunkHubVPCStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: TrunkHubVPCStackProps) {
     super(scope, id, props);
 
-    // Query the availability zones from AWS and pick any 2
+    // Query the availability zones from AWS and pick the first 2
     const availabilityZones = cdk.Stack.of(this).availabilityZones.slice(0, 2);
 
     const vpc = new ec2.Vpc(this, 'trunk-hub-vpc', {

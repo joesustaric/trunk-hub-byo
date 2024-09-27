@@ -1,16 +1,16 @@
+import { applyCheckovSkips } from './exceptions/trunk-hub-app-stack-ex';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Construct } from 'constructs';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
-import * as kms from 'aws-cdk-lib/aws-kms';
-import { applyCheckovSkips } from './exceptions/trunk-hub-app-stack-ex';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 interface TrunkHubAppStackProps extends cdk.StackProps {
     vpcStackName: string;
@@ -130,6 +130,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             ],
         });
 
+        // Grant read access to the secrets
         sshRsaPrivateKeySecret.grantRead(ec2InstanceRole);
         sshEcsdaPrivateKeySecret.grantRead(ec2InstanceRole);
         sshEd25519PrivateKeySecret.grantRead(ec2InstanceRole);
