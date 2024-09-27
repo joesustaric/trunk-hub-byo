@@ -25,6 +25,21 @@ Based on the [Keep a Changelog](https://keepachangelog.com) format.
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
 
+## Connecting to servers from command line
+The VPC the app is deployed into should alow for AWS Session Manager to be used to connect to the servers.
+
+If you have the aws cli installed you may need to install the session manager plugin.
+
+```bash
+# For MacOS
+brew install session-manager-plugin
+
+# To connect
+aws ssm start-session --target your-instance-id
+```
+
+For other operating systems please see the [AWS Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+
 ## Security
 
 Using `checkov` for security scanning.
