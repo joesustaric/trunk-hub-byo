@@ -17,7 +17,7 @@ Types of changes to keep track of.
 ## [Unreleased]
 
 ### Added
--
+- TODO: all the things that this has
 - checkov for security scanning
 - testing for the VPC
-- an AWS VPC using the VPC construct
+- An AWS VPC using the VPC construct
