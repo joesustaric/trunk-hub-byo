@@ -3,6 +3,7 @@ import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
@@ -87,7 +88,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             encryptionKey: kmsKey,
         });
 
-        // Create a Network Load Balancer
+        // Create a Network Load Balancer (NLB)
         const nlb = new elbv2.NetworkLoadBalancer(this, 'app-nlb', {
             vpc,
             internetFacing: true,
@@ -115,7 +116,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         // Enable access logging for the NLB
         nlb.logAccessLogs(nlbLogBucket);
 
-        // Set nlb attributes
+        // Set NLB attributes
         nlb.setAttribute('load_balancing.cross_zone.enabled', 'true')
         nlb.setAttribute('access_logs.s3.bucket', nlbLogBucket.bucketName)
         nlb.setAttribute('access_logs.s3.enabled', 'true')
@@ -129,7 +130,9 @@ export class TrunkHubAppStack extends cdk.Stack {
             ],
         });
 
-        sshPrivateKeySecret.grantRead(ec2InstanceRole);
+        sshRsaPrivateKeySecret.grantRead(ec2InstanceRole);
+        sshEcsdaPrivateKeySecret.grantRead(ec2InstanceRole);
+        sshEd25519PrivateKeySecret.grantRead(ec2InstanceRole);
 
         const securityGroup = new ec2.SecurityGroup(this, 'instance-security-group', {
             allowAllOutbound: true,
