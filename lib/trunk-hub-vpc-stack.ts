@@ -76,5 +76,12 @@ export class TrunkHubVPCStack extends cdk.Stack {
         value: subnet.subnetId,
       });
     });
+
+    // Output the VPC CIDR block
+    new cdk.CfnOutput(this, `VpcCIDRBlock`, {
+      description: `VPC CIDR Block`,
+      exportName: `${id}:VpcCIDRBlock`,
+      value: vpc.vpcCidrBlock,
+    });
   }
 }
