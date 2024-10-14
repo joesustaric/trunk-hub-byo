@@ -15,7 +15,8 @@ upload_public_key() {
     echo "Checking if public key file exists at $key_path"
     if [[ -f "$key_path" ]]; then
         echo "Uploading public key $key_name to SSM Parameter Store..."
-        local key_content=$(cat "$key_path")
+        local key_content
+        key_content=$(cat "$key_path")
         aws ssm put-parameter \
             --name "$parameter_name" \
             --value "$key_content" \
@@ -37,7 +38,8 @@ upload_private_key() {
     echo "Checking if private key file exists at $key_path"
     if [ -f "$key_path" ]; then
         echo "Uploading private key $key_name to Secrets Manager..."
-        local key_content=$(cat "$key_path")
+        local key_content
+        key_content=$(cat "$key_path")
         aws secretsmanager update-secret \
             --secret-id "$secret_name" \
             --secret-string "$key_content" \
