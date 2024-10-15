@@ -1,19 +1,6 @@
 {
     "failed_checks": [
         {
-            "file": "/TrunkHubByoStackDev.template.json",
-            "findings": [
-                {
-                    "resource": "AWS::Lambda::Function.CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
-                    "check_ids": [
-                        "CKV_AWS_115",
-                        "CKV_AWS_116",
-                        "CKV_AWS_117"
-                    ]
-                }
-            ]
-        },
-        {
             "file": "/TrunkHubByoStackProd.template.json",
             "findings": [
                 {
@@ -31,51 +18,6 @@
             "findings": [
                 {
                     "resource": "AWS::Lambda::Function.CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
-                    "check_ids": [
-                        "CKV_AWS_115",
-                        "CKV_AWS_116",
-                        "CKV_AWS_117"
-                    ]
-                },
-                {
-                    "resource": "AWS::S3::Bucket.alblogsDA4C705D",
-                    "check_ids": [
-                        "CKV_AWS_18"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/trunk-hub-app-prod.template.json",
-            "findings": [
-                {
-                    "resource": "AWS::Lambda::Function.CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
-                    "check_ids": [
-                        "CKV_AWS_115",
-                        "CKV_AWS_116",
-                        "CKV_AWS_117"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/trunk-hub-vpc-dev.template.json",
-            "findings": [
-                {
-                    "resource": "AWS::Lambda::Function.CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
-                    "check_ids": [
-                        "CKV_AWS_115",
-                        "CKV_AWS_116",
-                        "CKV_AWS_117"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/trunk-hub-vpc-prod.template.json",
-            "findings": [
-                {
-                    "resource": "AWS::Lambda::Function.CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
                     "check_ids": [
                         "CKV_AWS_115",
                         "CKV_AWS_116",

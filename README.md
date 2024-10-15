@@ -6,7 +6,7 @@ No web interface, just a robust git server hosted in the cloud.
 
 ## TODOS
 - [ ] Code linting
-- [ ] EFS for shared storage
+- [x] EFS for shared storage
 - [ ] Backup EFS to S3
 - [ ] Figure out how to do configure a push hook to trigger something
 - [ ] use https://fck-nat.dev/v1.3.0/ instead of managed NAT
