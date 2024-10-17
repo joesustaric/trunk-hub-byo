@@ -181,7 +181,9 @@ export class TrunkHubAppStack extends cdk.Stack {
             fileSystemName: 'shared-app-file-system',
             fileSystemPolicy: efsPolicy,
             kmsKey: kmsKey,
-            lifecyclePolicy: efs.LifecyclePolicy.AFTER_90_DAYS, // Transition to IA after 7 days
+            lifecyclePolicy: efs.LifecyclePolicy.AFTER_90_DAYS, // Transition to IA
+            outOfInfrequentAccessPolicy: efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS,
+            transitionToArchivePolicy: efs.LifecyclePolicy.AFTER_365_DAYS,
             performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
             removalPolicy: cdk.RemovalPolicy.DESTROY, //TODO: Make a parameter
             throughputMode: efs.ThroughputMode.BURSTING,
