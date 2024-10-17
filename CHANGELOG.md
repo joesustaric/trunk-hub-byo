@@ -17,7 +17,10 @@ Types of changes to keep track of.
 ## [Unreleased]
 
 ### Added
-- TODO: all the things that this has
-- checkov for security scanning
-- testing for the VPC
-- An AWS VPC using the VPC construct
+- Added CDK AWS VPC Construct for a VPC if you don't have one.
+    - EC2 Instance Connect endpoint using EC2 service endpoint
+- Created the App stack that creates the git server.
+    - EC2 instance with the git server installed (Amazon Linux 2)
+    - Network Load Balancer
+    - Shared EFS volume
+    - S3 Bucket(s) for backups / logging
