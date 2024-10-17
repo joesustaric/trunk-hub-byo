@@ -4,9 +4,10 @@ Build a run your own Git Server in the cloud that only accepts default (trunk/ma
 
 No web interface, just a robust git server hosted in the cloud.
 
-## TODOS
+## TODO:
+- [ ] How to add a new Repo
 - [ ] Code linting
-- [ ] Backup EFS to S3 checking
+- [ ] Backup EFS
 - [ ] Daily Cost Estimate
 - [ ] Figure out how to do configure a push hook to trigger
 - [ ] use https://fck-nat.dev/v1.3.0/ instead of managed NAT(? reduce costs)
