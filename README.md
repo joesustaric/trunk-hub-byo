@@ -6,10 +6,10 @@ No web interface, just a robust git server hosted in the cloud.
 
 ## TODOS
 - [ ] Code linting
-- [x] EFS for shared storage
-- [ ] Backup EFS to S3
-- [ ] Figure out how to do configure a push hook to trigger something
-- [ ] use https://fck-nat.dev/v1.3.0/ instead of managed NAT
+- [ ] Backup EFS to S3 checking
+- [ ] Daily Cost Estimate
+- [ ] Figure out how to do configure a push hook to trigger
+- [ ] use https://fck-nat.dev/v1.3.0/ instead of managed NAT(? reduce costs)
 
 # Stacks
 ## trunk-hub-vpc-dev|prod
@@ -29,11 +29,24 @@ This is the main stack that creates the configuration to host the git server. It
 
 TODO: Architecture Diagram and how to define the VPC inputs if not using the VPC stack.
 
+## Pre Steps
+TODO: Make a checklist here
+
+
 ### SSH Keys
 
 To ensure the host keys stay the same no matter which EC2 instance you ssh to, you will need to regenerate several keys and upload them to the SSM Parameter Store.
 
 TODO: Add instructions on how to generate the keys and upload them to the SSM Parameter Store.
+
+### BYO VPC?
+TODO: If so these are the params the app stack needs.
+If not, deploy the VPC stack first.
+
+### Deploy the App Stack
+TODO: instructions on how to deploy the app stack
+
+What about DNS? BYO or use Route53 and point to NLB
 
 ## Changelog
 This project uses a CHANGELOG.md file to keep track of changes.
@@ -50,7 +63,7 @@ Based on the [Keep a Changelog](https://keepachangelog.com) format.
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
 
-## Connecting to servers from command line
+## Connecting to Git Servers
 The VPC the app is deployed into should alow for AWS Session Manager to be used to connect to the servers.
 
 See [AWS Session Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html) and [VPC Setup](https://docs.aws.amazon.com/systems-manager/latest/userguide/setup-create-vpc.html).
@@ -67,9 +80,13 @@ aws ssm start-session --target your-instance-id
 
 For other operating systems please see the [AWS Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 
+If you BYO AWS VPC you will need to ensure its configured for Session Manager access.
+
 ## Security
 
 Using `checkov` for security scanning.
+
+There is a configuration file in the root of the project with all the options for checkov to run. `./checkov.yaml`
 
 ```bash
 # Install checkov
@@ -77,39 +94,48 @@ brew install checkov
 # Run checkov
 checkov
 ```
-There is a configuration file in the root of the project with all the options for checkov to run.
 
 ### Checkov Exceptions
 
-TODO: how to add exceptions to checkov
+Each stack in this project has a corresponding file in the `exceptions/` directory. You pass in the item into a function from the main stack file.
+```typescript
+import { applyCheckovSkips } from './exceptions/trunk-hub-app-stack-ex';
 
-### Handy checkov commands
+// rest of the code
 
-The configuration file should have all the options ready to go.
-
-Just run:
-
-```bash
-checkov
+applyCheckovSkips(s3Bucket);
 ```
 
-To trigger all the security checks.
+Then in the exception file you can add the metadata as shown below.
 
-Create baseline, the file will do into `cdk.out` directory.
-The checkov configuration file points to the `.checkov.baseline` file in the root of the project.
+```typescript
+const cfnS3Bucket = s3Bucket.node.defaultChild as s3.CfnBucket;
+cfnS3Bucket.cfnOptions.metadata = {
+    'checkov': {
+        'skip': [
+            {
+                'id': 'CKV_AWS_ID',
+                'comment': 'Reason for skipping'
+            },
+        ]
+    }
+}
+```
+
+Some times it might not be straight forward to apply a skip to a resource. Especially when deploying constructs that add lambdas to perform certain actions like clean up buckets or change security group rules for the VPC deployment.
+
+Until a better way is discovered that can fit with the above pattern we can use the `.checkov.baseline` file to skip checks.
+
+To regenerate the baseline file run the following command:
 
 ```bash
-checkov --create-baseline --output-baseline-as-skipped -d cdk.out
+npx cdk synth
+
+checkov --create-baseline
 ```
-## Skipping a check
+This will create the a `.checkov.baseline` in the `cdk.out/` directory. You will need to copy and pase the new skipped checks int the `.checkov.baseline` file in the root of the project.
 
-There is a `.checkov.skip` file in the root of the project that contains the checks that are skipped. You can regenerate the file by running the following command:
-
-```bash
-checkov --create-checkov-skip-file #recheck this
-```
-
-## Recording ADRS
+## Recording Architecture Decisions
 
 We use [adr-tools](https://github.com/npryce/adr-tools) to record our Architecture Decision Records (ADRs).
 
