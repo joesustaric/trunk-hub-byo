@@ -23,4 +23,3 @@ Types of changes to keep track of.
     - EC2 instance with the git server installed (Amazon Linux 2)
     - Network Load Balancer
     - Shared EFS volume
-    - S3 Bucket(s) for backups / logging
