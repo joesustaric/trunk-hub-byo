@@ -26,12 +26,19 @@ sudo chown -R git:git /home/git/.ssh
 sudo runuser -l git -c 'touch .ssh/authorized_keys && chmod 600 .ssh/authorized_keys'
 sudo runuser -l git -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3OuNRLfCK3upvG6JKmDAlnsl6x4bxkCnKQbrIt7+uk joe@emaill.com" >> ~/.ssh/authorized_keys'
 
-# Set up a bare Git repository for testing
-# TODO: Fix the default branch name.
-# TODO: run this else where
-echo "Setting up a bare Git repository..."
-# sudo runuser -l git -c 'mkdir -p /srv/git/trunk-hub-test.git'
-# sudo runuser -l git -c 'cd /srv/git/trunk-hub-test.git && git init --bare --initial-branch=trunk'
+# Retrieve the bucket name from the SSM parameter store
+SCRIPTS_BUCKET_NAME=$(aws ssm get-parameter --name /trunk-hub/ec2-scripts-bucket --region ap-southeast-2 --query Parameter.Value --output text)
+# Create a temporary directory to store the downloaded scripts
+TEMP_DIR=$(mktemp -d)
+cd $TEMP_DIR
+# List and download all scripts with the prefix 'ec2-scripts' from the S3 bucket
+aws s3 cp s3://$SCRIPTS_BUCKET_NAME/ec2-scripts/ . --recursive --region ap-southeast-2
+# Move the scripts to a global executable location
+sudo mv * /usr/local/bin/
+sudo chmod +x /usr/local/bin/*
+# Clean up the temporary directory
+rm -rf $TEMP_DIR
+echo "User data script completed successfully."
 
 echo "Seting up SSH agent and add the private keys"
 aws secretsmanager get-secret-value --secret-id trunk-hub-app-rsa-ssh-key --region ap-southeast-2 --query SecretString --output text > /etc/ssh/ssh_host_rsa_key

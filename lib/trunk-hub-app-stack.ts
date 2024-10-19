@@ -279,7 +279,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             protocol: elbv2.Protocol.TCP,
         });
 
-            // Create an S3 bucket for storing the new-git-repo script
+        // Create an S3 bucket for storing the new-git-repo script
         const scriptBucket = new s3.Bucket(this, 'app-script-bucket', {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
@@ -294,6 +294,14 @@ export class TrunkHubAppStack extends cdk.Stack {
             actions: ['s3:GetObject'],
             resources: [`${scriptBucket.bucketArn}/*`],
         }));
+
+        // SSM parameter for the EFS DNS name
+        new ssm.StringParameter(this, 'app-script-bucket-ssmg', {
+            description: 'S3 bucket name for scripts',
+            parameterName: '/trunk-hub/ec2-scripts-bucket',
+            stringValue: scriptBucket.bucketName,
+            tier: ssm.ParameterTier.STANDARD,
+        });
 
       // Upload the new-git-repo script to the S3 bucket
         new s3deploy.BucketDeployment(this, 'DeployEc2Scripts', {
