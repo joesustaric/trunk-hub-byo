@@ -296,7 +296,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         }));
 
         // SSM parameter for the EFS DNS name
-        new ssm.StringParameter(this, 'app-script-bucket-ssmg', {
+        new ssm.StringParameter(this, 'app-script-bucket-ssmgi', {
             description: 'S3 bucket name for scripts',
             parameterName: '/trunk-hub/ec2-scripts-bucket',
             stringValue: scriptBucket.bucketName,
