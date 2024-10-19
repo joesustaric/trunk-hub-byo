@@ -11,6 +11,7 @@ import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 
@@ -111,6 +112,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         const nlbLogBucket = new s3.Bucket(this, 'app-nlb-logs', {
             autoDeleteObjects: true,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            encryption: s3.BucketEncryption.S3_MANAGED,
             lifecycleRules: [
                 {
                     expiration: cdk.Duration.days(90),
@@ -275,6 +277,29 @@ export class TrunkHubAppStack extends cdk.Stack {
             defaultTargetGroups: [sshTargetGroup],
             port: 22,
             protocol: elbv2.Protocol.TCP,
+        });
+
+            // Create an S3 bucket for storing the new-git-repo script
+        const scriptBucket = new s3.Bucket(this, 'app-script-bucket', {
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            autoDeleteObjects: true,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            encryption: s3.BucketEncryption.S3_MANAGED,
+        });
+
+        // Add a bucket policy to allow the EC2 instance role to download from the bucket
+        scriptBucket.addToResourcePolicy(new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            principals: [new iam.ArnPrincipal(ec2InstanceRole.roleArn)],
+            actions: ['s3:GetObject'],
+            resources: [`${scriptBucket.bucketArn}/*`],
+        }));
+
+      // Upload the new-git-repo script to the S3 bucket
+        new s3deploy.BucketDeployment(this, 'DeployEc2Scripts', {
+            sources: [s3deploy.Source.asset(path.join(__dirname, './scripts/ec2/'))],
+            destinationBucket: scriptBucket,
+            destinationKeyPrefix: 'ec2-scripts',
         });
 
         applyCheckovSkips(securityGroup, nlbLogBucket)
