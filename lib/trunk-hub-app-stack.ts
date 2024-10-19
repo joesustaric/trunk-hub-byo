@@ -186,7 +186,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             transitionToArchivePolicy: efs.LifecyclePolicy.AFTER_365_DAYS,
             performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
             removalPolicy: cdk.RemovalPolicy.DESTROY, //TODO: Make a parameter
-            throughputMode: efs.ThroughputMode.BURSTING,
+            throughputMode: efs.ThroughputMode.ELASTIC,
             vpc,
         });
 
