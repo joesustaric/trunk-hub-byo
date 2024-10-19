@@ -221,7 +221,7 @@ export class TrunkHubAppStack extends cdk.Stack {
         // User data script to set up the server
         const userData = ec2.UserData.forLinux();
         const userDataScript = fs.readFileSync(
-            path.join(__dirname, 'user-data/app.sh'), 'utf8'
+            path.join(__dirname, 'scripts/user-data.sh'), 'utf8'
         );
         userData.addCommands(userDataScript);
 
