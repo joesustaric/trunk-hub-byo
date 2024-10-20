@@ -1,6 +1,8 @@
 #!/bin/bash
 set -ex
 
+REGION=ap-southeast-2
+
 yum update -y
 yum install -y git amazon-efs-utils
 
@@ -14,7 +16,7 @@ echo "Mounting EFS file system..."
 EFS_DNS_NAME=$(\
     aws ssm get-parameter \
         --name /trunk-hub/efs-dns-name \
-        --region ap-southeast-2 \
+        --region "$REGION" \
         --query Parameter.Value \
         --output text \
     )
@@ -36,7 +38,7 @@ sudo runuser -l git -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3OuNRLfCK3up
 SCRIPTS_BUCKET_NAME=$(\
     aws ssm get-parameter \
         --name /trunk-hub/ec2-scripts-bucket \
-        --region ap-southeast-2 \
+        --region "$REGION" \
         --query Parameter.Value \
         --output text \
 )
@@ -60,7 +62,7 @@ get_ssm_param_and_set_perm() {
 
     aws ssm get-parameter \
         --name "$key_name" \
-        --region ap-southeast-2 \
+        --region "$REGION" \
         --query Parameter.Value \
         --output text > "$key_path"
 
@@ -87,6 +89,7 @@ get_priv_key_and_save() {
     chmod 600 "$file_path"
     chown root:root "$file_path"
 }
+
 echo "Setting up SSH agent and adding the private keys..."
 get_priv_key_and_save "trunk-hub-app-rsa-ssh-key" "/etc/ssh/ssh_host_rsa_key"
 get_priv_key_and_save "trunk-hub-app-ecdsa-ssh-key" "/etc/ssh/ssh_host_ecdsa_key"

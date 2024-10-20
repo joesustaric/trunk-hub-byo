@@ -5,7 +5,8 @@ Build a run your own Git Server in the cloud that only accepts default (trunk/ma
 No web interface, just a robust git server hosted in the cloud.
 
 ## TODO:
-- [ ] How to add a new Repo
+- [ ] CDK tests
+- [ ] Architecture Diagrams
 - [ ] Code linting
 - [ ] Backup EFS
 - [ ] Daily Cost Estimate
