@@ -52,7 +52,7 @@ sudo chmod +x ./*
 sudo mv ./* /usr/local/bin/
 cd -
 rm -rf "$TEMP_DIR"
-echo "User data script completed successfully."
+
 
 echo "Seting up SSH agent and add the public/private keys"
 # Function to download and set permissions for SSH keys
