@@ -21,7 +21,6 @@ function applyTags(stack: cdk.Stack, tags: { [key: string]: string }) {
 // Tags for dev and prod environments
 const commonTags = {
   system: 'trunk-hub',
-  'test:foo': 'bar'
 };
 
 const devTags = {
