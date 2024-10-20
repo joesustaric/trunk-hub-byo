@@ -287,16 +287,24 @@ export class TrunkHubAppStack extends cdk.Stack {
             encryption: s3.BucketEncryption.S3_MANAGED,
         });
 
+
         // Add a bucket policy to allow the EC2 instance role to download from the bucket
         scriptBucket.addToResourcePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             principals: [new iam.ArnPrincipal(ec2InstanceRole.roleArn)],
-            actions: ['s3:GetObject'],
-            resources: [`${scriptBucket.bucketArn}/*`],
+            actions: [
+                's3:GetObject',
+                's3:GetBucketLocation',
+                's3:ListBucket'
+            ],
+            resources: [
+                scriptBucket.bucketArn,
+                `${scriptBucket.bucketArn}/*`
+            ],
         }));
 
         // SSM parameter for the EFS DNS name
-        new ssm.StringParameter(this, 'app-script-bucket-ssmgi', {
+        new ssm.StringParameter(this, 'app-script-bucket-ssm', {
             description: 'S3 bucket name for scripts',
             parameterName: '/trunk-hub/ec2-scripts-bucket',
             stringValue: scriptBucket.bucketName,

@@ -11,7 +11,13 @@ sudo mkdir -p /srv/git
 sudo chown -R git:git /srv/git
 
 echo "Mounting EFS file system..."
-EFS_DNS_NAME=$(aws ssm get-parameter --name /trunk-hub/efs-dns-name --region ap-southeast-2 --query Parameter.Value --output text)
+EFS_DNS_NAME=$(\
+    aws ssm get-parameter \
+        --name /trunk-hub/efs-dns-name \
+        --region ap-southeast-2 \
+        --query Parameter.Value \
+        --output text \
+    )
 sudo mount -t efs -o tls,iam "$EFS_DNS_NAME:/" /srv/git/
 
 # Switch to the 'git' user
@@ -27,48 +33,64 @@ sudo runuser -l git -c 'touch .ssh/authorized_keys && chmod 600 .ssh/authorized_
 sudo runuser -l git -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3OuNRLfCK3upvG6JKmDAlnsl6x4bxkCnKQbrIt7+uk joe@emaill.com" >> ~/.ssh/authorized_keys'
 
 # Retrieve the bucket name from the SSM parameter store
-SCRIPTS_BUCKET_NAME=$(aws ssm get-parameter --name /trunk-hub/ec2-scripts-bucket --region ap-southeast-2 --query Parameter.Value --output text)
+SCRIPTS_BUCKET_NAME=$(\
+    aws ssm get-parameter \
+        --name /trunk-hub/ec2-scripts-bucket \
+        --region ap-southeast-2 \
+        --query Parameter.Value \
+        --output text \
+)
 # Create a temporary directory to store the downloaded scripts
 TEMP_DIR=$(mktemp -d)
-cd $TEMP_DIR
+cd "$TEMP_DIR"
 # List and download all scripts with the prefix 'ec2-scripts' from the S3 bucket
-aws s3 cp s3://$SCRIPTS_BUCKET_NAME/ec2-scripts/ . --recursive --region ap-southeast-2
+aws s3 cp s3://"$SCRIPTS_BUCKET_NAME"/ec2-scripts/ . --recursive --region ap-southeast-2
 # Move the scripts to a global executable location
-sudo mv * /usr/local/bin/
-sudo chmod +x /usr/local/bin/*
-# Clean up the temporary directory
-rm -rf $TEMP_DIR
+sudo chmod +x ./*
+sudo mv ./* /usr/local/bin/
+cd -
+rm -rf "$TEMP_DIR"
 echo "User data script completed successfully."
 
-echo "Seting up SSH agent and add the private keys"
-aws secretsmanager get-secret-value --secret-id trunk-hub-app-rsa-ssh-key --region ap-southeast-2 --query SecretString --output text > /etc/ssh/ssh_host_rsa_key
-sudo chmod 600 /etc/ssh/ssh_host_rsa_key
-chown root:root /etc/ssh/ssh_host_rsa_key
+echo "Seting up SSH agent and add the public/private keys"
+# Function to download and set permissions for SSH keys
+get_ssm_param_and_set_perm() {
+    local key_name=$1
+    local key_path=$2
 
-aws secretsmanager get-secret-value --secret-id trunk-hub-app-ecdsa-ssh-key --region ap-southeast-2 --query SecretString --output text > /etc/ssh/ssh_host_ecdsa_key
-sudo chmod 600 /etc/ssh/ssh_host_ecdsa_key
-chown root:root /etc/ssh/ssh_host_ecdsa_key
+    aws ssm get-parameter \
+        --name "$key_name" \
+        --region ap-southeast-2 \
+        --query Parameter.Value \
+        --output text > "$key_path"
 
-aws secretsmanager get-secret-value --secret-id trunk-hub-app-ed25519-ssh-key --region ap-southeast-2 --query SecretString --output text > /etc/ssh/ssh_host_rsa_key
-sudo chmod 600 /etc/ssh/ssh_host_ed25519_key
-chown root:root /etc/ssh/ssh_host_ed25519_key
+    chmod 644 "$key_path"
+    chown root:root "$key_path"
+}
 
-# Download the public keys from SSM Parameter Store and save it to /etc/ssh/
 echo "Downloading and saving public keys from SSM Parameter Store..."
-aws ssm get-parameter --name /trunk-hub/ssh/public-rsa-ssh-key --region ap-southeast-2 --query Parameter.Value --output text > /etc/ssh/ssh_host_rsa_key.pub
-chmod 644 /etc/ssh/ssh_host_rsa_key.pub
-chown root:root /etc/ssh/ssh_host_rsa_key.pub
+get_ssm_param_and_set_perm "/trunk-hub/ssh/public-rsa-ssh-key" "/etc/ssh/ssh_host_rsa_key.pub"
+get_ssm_param_and_set_perm "/trunk-hub/ssh/public-ecdsa-ssh-key" "/etc/ssh/ssh_host_ecdsa_key.pub"
+get_ssm_param_and_set_perm "/trunk-hub/ssh/public-ed25519-ssh-key" "/etc/ssh/ssh_host_ed25519_key.pub"
 
-aws ssm get-parameter --name /trunk-hub/ssh/public-ecdsa-ssh-key \
-    --region ap-southeast-2 \
-    --query Parameter.Value \
-    --output text > /etc/ssh/ssh_host_ecdsa_key.pub
-chmod 644 /etc/ssh/ssh_host_ecdsa_key.pub
-chown root:root /etc/ssh/ssh_host_ecdsa_key.pub
+# Function to download and set permissions for SSH keys from Secrets Manager
+get_priv_key_and_save() {
+    local secret_id=$1
+    local file_path=$2
 
-aws ssm get-parameter --name /trunk-hub/ssh/public-ed25519-ssh-key --region ap-southeast-2 --query Parameter.Value --output text > /etc/ssh/ssh_host_ed25519_key.pub
-chmod 644 /etc/ssh/ssh_host_ed25519_key.pub
-chown root:root /etc/ssh/ssh_host_ed25519_key.pub
+    aws secretsmanager get-secret-value \
+        --secret-id "$secret_id" \
+        --region "$REGION" \
+        --query SecretString \
+        --output text > "$file_path"
+
+    chmod 600 "$file_path"
+    chown root:root "$file_path"
+}
+echo "Setting up SSH agent and adding the private keys..."
+get_priv_key_and_save "trunk-hub-app-rsa-ssh-key" "/etc/ssh/ssh_host_rsa_key"
+get_priv_key_and_save "trunk-hub-app-ecdsa-ssh-key" "/etc/ssh/ssh_host_ecdsa_key"
+get_priv_key_and_save "trunk-hub-app-ed25519-ssh-key" "/etc/ssh/ssh_host_ed25519_key"
 
 systemctl restart sshd
 
