@@ -32,7 +32,10 @@ echo "Setting up SSH directory and authorized keys..."
 mkdir -p .ssh && chmod 700 .ssh
 sudo chown -R git:git /home/git/.ssh
 sudo runuser -l git -c 'touch .ssh/authorized_keys && chmod 600 .ssh/authorized_keys'
-sudo runuser -l git -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3OuNRLfCK3upvG6JKmDAlnsl6x4bxkCnKQbrIt7+uk joe@emaill.com" >> ~/.ssh/authorized_keys'
+sudo runuser -l git -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3OuNRLfCK3upvG6JKmDAlnsl6x4bxkCnKQbrIt7+uk joe@email.com" >> ~/.ssh/authorized_keys'
+# copy and paste this line to add more public keys
+# then recycle the Ec2 instaces to apply the changes
+#sudo runuser -l git -c 'echo "the-public-key email@email.com" >> ~/.ssh/authorized_keys'
 
 # Retrieve the bucket name from the SSM parameter store
 SCRIPTS_BUCKET_NAME=$(\
