@@ -10,3 +10,6 @@ cdk.out
 
 # working dir with private key
 keys
+
+# Ignore CDK context file
+cdk.context.json
