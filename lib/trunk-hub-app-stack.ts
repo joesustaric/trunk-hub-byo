@@ -220,6 +220,14 @@ export class TrunkHubAppStack extends cdk.Stack {
             tier: ssm.ParameterTier.STANDARD,
         });
 
+        // SSM parameter for the EFS File System ID
+        new ssm.StringParameter(this, 'app-efs-file-system-id', {
+            description: 'EFS DNS name',
+            parameterName: '/trunk-hub/efs-file-system-id',
+            stringValue: efsFileSystem.fileSystemId,
+            tier: ssm.ParameterTier.STANDARD,
+        });
+
         // User data script to set up the server
         const userData = ec2.UserData.forLinux();
         const userDataScript = fs.readFileSync(
