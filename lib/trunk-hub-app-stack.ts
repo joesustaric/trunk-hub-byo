@@ -48,6 +48,13 @@ export class TrunkHubAppStack extends cdk.Stack {
             description: 'KMS key to encrypt things',
         });
 
+        // Output the KMS Key Arn
+        new cdk.CfnOutput(this, 'KMSKeyArn', {
+            description: `KMS Key ID`,
+            exportName: `${id}:ArnKMSKey`,
+            value: kmsKey.keyArn,
+        });
+
         // SSM parameter for the rsa public key
         new ssm.StringParameter(this, 'app-public-rsa-ssh-key', {
             parameterName: '/trunk-hub/ssh/public-rsa-ssh-key',
@@ -178,7 +185,7 @@ export class TrunkHubAppStack extends cdk.Stack {
 
         // Create the EFS file system
         const efsFileSystem = new efs.FileSystem(this, 'shared-file-system', {
-            enableAutomaticBackups: true,
+            enableAutomaticBackups: false, // There is a backup stack that will handle this
             encrypted: true,
             fileSystemName: 'shared-app-file-system',
             fileSystemPolicy: efsPolicy,
@@ -187,7 +194,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             outOfInfrequentAccessPolicy: efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS,
             transitionToArchivePolicy: efs.LifecyclePolicy.AFTER_365_DAYS,
             performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
-            removalPolicy: cdk.RemovalPolicy.DESTROY, //TODO: Make a parameter
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
             throughputMode: efs.ThroughputMode.ELASTIC,
             vpc,
         });
@@ -221,11 +228,18 @@ export class TrunkHubAppStack extends cdk.Stack {
         });
 
         // SSM parameter for the EFS File System ID
-        new ssm.StringParameter(this, 'app-efs-file-system-id', {
-            description: 'EFS DNS name',
-            parameterName: '/trunk-hub/efs-file-system-id',
-            stringValue: efsFileSystem.fileSystemId,
-            tier: ssm.ParameterTier.STANDARD,
+        // new ssm.StringParameter(this, 'app-efs-file-system-id', {
+        //     description: 'EFS DNS name',
+        //     parameterName: '/trunk-hub/efs-file-system-id',
+        //     stringValue: efsFileSystem.fileSystemId,
+        //     tier: ssm.ParameterTier.STANDARD,
+        // });
+
+        // Output the EFS File System Id
+        new cdk.CfnOutput(this, 'efs-file-system-id', {
+            description: `EFS File System ID`,
+            exportName: `${id}:EFSFileSystemId`,
+            value: efsFileSystem.fileSystemId,
         });
 
         // User data script to set up the server

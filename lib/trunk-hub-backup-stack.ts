@@ -1,23 +1,33 @@
-import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as backup from 'aws-cdk-lib/aws-backup';
+import * as cdk from 'aws-cdk-lib';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 interface TrunkHubBackupStackProps extends cdk.StackProps {
-    vpcStackName: string;
+    appStackName: string;
 }
 
 export class TrunkHubBackupStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: TrunkHubBackupStackProps) {
         super(scope, id, props);
 
+        const kmsKeyArn = cdk.Fn.importValue(`${props.appStackName}:ArnKMSKey`);
+        const efsFileSystemId = cdk.Fn.importValue(`${props.appStackName}:EFSFileSystemId`);
+
+
+        // Retrieve the KMS key ARN from the SSM parameter store
+        // const kmsKeyArn = ssm.StringParameter.valueFromLookup(this, '/trunk-hub/kms-key-arn');
+        // const kmsKey = kms.Key.fromKeyArn(this, 'imported-kms-key', kmsKeyArn);
+
         // Retrieve the EFS file system ID from the SSM parameter store
-        const efsFileSystemId = ssm.StringParameter.valueFromLookup(this, '/trunk-hub/efs-file-system-id');
+        // const efsFileSystemId = ssm.StringParameter.valueFromLookup(this, '/trunk-hub/efs-file-system-id');
 
         // Create a backup vault
         const backupVault = new backup.BackupVault(this, 'trunk-hub-backup-vault', {
             backupVaultName: 'trunk-hub-backup-vault',
             removalPolicy: cdk.RemovalPolicy.DESTROY,
+            encryptionKey: kms.Key.fromKeyArn(this, 'imported-kms-key', kmsKeyArn),
         });
 
         // Create a backup plan
@@ -31,6 +41,7 @@ export class TrunkHubBackupStack extends cdk.Stack {
             ruleName: 'hourly-backup',
             scheduleExpression: cdk.aws_events.Schedule.cron({ minute: '0', hour: '*' }), // Hourly at the start of the hour
             deleteAfter: cdk.Duration.days(90), // Retain backups for 90 days
+
         }));
 
         // Create a backup selection to include the EFS file system

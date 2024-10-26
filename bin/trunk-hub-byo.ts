@@ -71,7 +71,7 @@ applyTags(prodAppStack, prodTags);
 // Backup
 // Instantiate the stack for the dev environment
 const devBackupStack = new TrunkHubBackupStack(app, 'trunk-hub-backup-dev', {
-  vpcStackName: 'trunk-hub-backup-dev',
+  appStackName: 'trunk-hub-app-dev',
   description: 'Dev environment stack for TrunkHub Backup',
   env: devEnv
 });
@@ -79,7 +79,7 @@ applyTags(devBackupStack, devTags);
 
 // Instantiate the stack for the prod environment
 const prodBackupStack = new TrunkHubBackupStack(app, 'trunk-hub-backup-prod', {
-  vpcStackName: 'trunk-hub-backup-prod',
+  appStackName: 'trunk-hub-app-prod',
   description: 'Prod environment stack for TrunkHub Backup',
   env: prodEnv
 });
