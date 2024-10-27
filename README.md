@@ -13,6 +13,9 @@ No web interface, just a robust git server hosted in the cloud.
 - [ ] Figure out how to do configure a push hook to trigger
 - [ ] use https://fck-nat.dev/v1.3.0/ instead of managed NAT(? reduce costs)
 
+# Basic Architecture
+![Basic Architecture](./docs/imgs/basic-architecture.drawio.png)
+
 # Stacks
 ## trunk-hub-vpc-dev|prod
 This is a AWS VPC based of the CDK VPC construct in CDK. It is a simple VPC with 2 public and 2 private subnets. It is configured for Session Manager access including the necessary rules to allow the AWS Session Manager to connect to private and public instances.
