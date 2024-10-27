@@ -34,6 +34,18 @@ This is the main stack that creates the configuration to host the git server. It
 
 TODO: Architecture Diagram and how to define the VPC inputs if not using the VPC stack.
 
+## trunk-hub-backup-dev|prod
+
+This is the stack you can use to backup the EFS file system. It will use the same KMS Key from the App stack to encrypt the backups. (TODO: Maybe use a different key?)
+
+In the EFS CDK construct you can enable backups via a simple parameter. We've chosen to create a separate stack so that ou can configure your own schedule to suite your needs / risk profile.
+
+This stack will create:
+- Back Up Vault
+- Back Up Plan
+
+This stack needs several inputs. The EFS file system ID and the KMS Key ID.
+
 ## Pre Steps
 TODO: Make a checklist here
 
