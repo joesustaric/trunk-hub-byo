@@ -12,16 +12,9 @@ export class TrunkHubBackupStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: TrunkHubBackupStackProps) {
         super(scope, id, props);
 
+        //TODO: Or parameters if passed in
         const kmsKeyArn = cdk.Fn.importValue(`${props.appStackName}:ArnKMSKey`);
-        const efsFileSystemId = cdk.Fn.importValue(`${props.appStackName}:EFSFileSystemId`);
-
-
-        // Retrieve the KMS key ARN from the SSM parameter store
-        // const kmsKeyArn = ssm.StringParameter.valueFromLookup(this, '/trunk-hub/kms-key-arn');
-        // const kmsKey = kms.Key.fromKeyArn(this, 'imported-kms-key', kmsKeyArn);
-
-        // Retrieve the EFS file system ID from the SSM parameter store
-        // const efsFileSystemId = ssm.StringParameter.valueFromLookup(this, '/trunk-hub/efs-file-system-id');
+        const efsId = cdk.Fn.importValue(`${props.appStackName}:EFSFileSystemId`);
 
         // Create a backup vault
         const backupVault = new backup.BackupVault(this, 'trunk-hub-backup-vault', {
@@ -30,31 +23,37 @@ export class TrunkHubBackupStack extends cdk.Stack {
             encryptionKey: kms.Key.fromKeyArn(this, 'imported-kms-key', kmsKeyArn),
         });
 
+        // Backup Rule
+        const backupRule = new backup.BackupPlanRule({
+            ruleName: 'every-6-hours-backup',
+            scheduleExpression: cdk.aws_events.Schedule.cron(
+                {
+                    minute: '0',
+                    hour: '0/6' //Every 6 hours
+                }
+            ),
+            moveToColdStorageAfter: cdk.Duration.days(30),
+            deleteAfter: cdk.Duration.days(120),
+        })
+
         // Create a backup plan
         const backupPlan = new backup.BackupPlan(this, 'trunk-hub-backup-plan', {
             backupPlanName: 'trunk-hub-backup-plan',
+            backupPlanRules: [ backupRule ],
             backupVault: backupVault,
         });
 
-        // Add a rule to the backup plan
-        backupPlan.addRule(new backup.BackupPlanRule({
-            ruleName: 'hourly-backup',
-            scheduleExpression: cdk.aws_events.Schedule.cron({ minute: '0', hour: '*' }), // Hourly at the start of the hour
-            deleteAfter: cdk.Duration.days(90), // Retain backups for 90 days
-
-        }));
-
         // Create a backup selection to include the EFS file system
-        backupPlan.addSelection('BackupSelection', {
+        backupPlan.addSelection('backup-selection', {
             resources: [
                 backup.BackupResource.fromArn(
-                    `arn:aws:elasticfilesystem:${this.region}:${this.account}:file-system/${efsFileSystemId}`
+                    `arn:aws:elasticfilesystem:${this.region}:${this.account}:file-system/${efsId}`
                 ),
             ],
         });
 
         // SSM parameter for the backup vault name
-        new ssm.StringParameter(this, 'BackupVaultName', {
+        new ssm.StringParameter(this, 'backup-vault-name', {
             parameterName: '/trunk-hub/backup-vault-name',
             stringValue: backupVault.backupVaultName,
             description: 'Name of the backup vault for EFS backups',

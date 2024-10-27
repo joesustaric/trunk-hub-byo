@@ -46,6 +46,7 @@ export class TrunkHubAppStack extends cdk.Stack {
             enableKeyRotation: true,
             alias: 'trunk-hub-app-key',
             description: 'KMS key to encrypt things',
+            removalPolicy: cdk.RemovalPolicy.DESTROY, //TODO: Make parameter
         });
 
         // Output the KMS Key Arn
@@ -226,14 +227,6 @@ export class TrunkHubAppStack extends cdk.Stack {
             stringValue: `${efsFileSystem.fileSystemId}.efs.${cdk.Stack.of(this).region}.amazonaws.com`,
             tier: ssm.ParameterTier.STANDARD,
         });
-
-        // SSM parameter for the EFS File System ID
-        // new ssm.StringParameter(this, 'app-efs-file-system-id', {
-        //     description: 'EFS DNS name',
-        //     parameterName: '/trunk-hub/efs-file-system-id',
-        //     stringValue: efsFileSystem.fileSystemId,
-        //     tier: ssm.ParameterTier.STANDARD,
-        // });
 
         // Output the EFS File System Id
         new cdk.CfnOutput(this, 'efs-file-system-id', {
