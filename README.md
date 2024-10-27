@@ -8,7 +8,6 @@ No web interface, just a robust git server hosted in the cloud.
 - [ ] CDK tests
 - [ ] Architecture Diagrams
 - [ ] Code linting
-- [ ] Backup EFS
 - [ ] Daily Cost Estimate
 - [ ] Figure out how to do configure a push hook to trigger
 - [ ] use https://fck-nat.dev/v1.3.0/ instead of managed NAT(? reduce costs)
