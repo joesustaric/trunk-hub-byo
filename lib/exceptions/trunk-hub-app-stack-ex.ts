@@ -2,8 +2,9 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 
 export function applyCheckovSkips(
-    securityGroup: ec2.SecurityGroup,
-    nlbLogBucket: s3.Bucket) {
+    securityGroup: ec2.SecurityGroup, nlbLogBucket: s3.Bucket,
+    scriptBucket: s3.Bucket
+) {
 
     const cfnSecurityGroup = securityGroup.node.defaultChild as ec2.CfnSecurityGroup;
     cfnSecurityGroup.cfnOptions.metadata = {
@@ -25,6 +26,22 @@ export function applyCheckovSkips(
                     'id': 'CKV_AWS_18',
                     'comment': 'Do not need access logging on this bucket'
                 },
+            ]
+        }
+    }
+
+    const cfnScriptBucket = scriptBucket.node.defaultChild as s3.CfnBucket;
+    cfnScriptBucket.cfnOptions.metadata = {
+        'checkov': {
+            'skip': [
+                {
+                    'id': 'CKV_AWS_18',
+                    'comment': 'Do not need access logging on this bucket'
+                },
+                {
+                    'id': 'CKV_AWS_21',
+                    'comment': 'Do not require bucket versioning'
+                }
             ]
         }
     }

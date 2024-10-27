@@ -333,6 +333,6 @@ export class TrunkHubAppStack extends cdk.Stack {
             destinationKeyPrefix: 'ec2-scripts',
         });
 
-        applyCheckovSkips(securityGroup, nlbLogBucket)
+        applyCheckovSkips(securityGroup, nlbLogBucket, scriptBucket)
     }
 }
