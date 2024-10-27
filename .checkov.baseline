@@ -1,7 +1,51 @@
 {
     "failed_checks": [
         {
-            "file": "/TrunkHubByoStackProd.template.json",
+            "file": "/trunk-hub-app-dev.template.json",
+            "findings": [
+                {
+                    "resource": "AWS::Lambda::Function.CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+                    "check_ids": [
+                        "CKV_AWS_115",
+                        "CKV_AWS_116",
+                        "CKV_AWS_117",
+                        "CKV_AWS_173"
+                    ]
+                },
+                {
+                    "resource": "AWS::Lambda::Function.CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+                    "check_ids": [
+                        "CKV_AWS_115",
+                        "CKV_AWS_116",
+                        "CKV_AWS_117"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/trunk-hub-app-prod.template.json",
+            "findings": [
+                {
+                    "resource": "AWS::Lambda::Function.CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+                    "check_ids": [
+                        "CKV_AWS_115",
+                        "CKV_AWS_116",
+                        "CKV_AWS_117",
+                        "CKV_AWS_173"
+                    ]
+                },
+                {
+                    "resource": "AWS::Lambda::Function.CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+                    "check_ids": [
+                        "CKV_AWS_115",
+                        "CKV_AWS_116",
+                        "CKV_AWS_117"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/trunk-hub-vpc-dev.template.json",
             "findings": [
                 {
                     "resource": "AWS::Lambda::Function.CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
@@ -14,10 +58,10 @@
             ]
         },
         {
-            "file": "/trunk-hub-app-dev.template.json",
+            "file": "/trunk-hub-vpc-prod.template.json",
             "findings": [
                 {
-                    "resource": "AWS::Lambda::Function.CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+                    "resource": "AWS::Lambda::Function.CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
                     "check_ids": [
                         "CKV_AWS_115",
                         "CKV_AWS_116",
