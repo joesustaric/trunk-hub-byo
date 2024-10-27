@@ -5,6 +5,7 @@ Build a run your own Git Server in the cloud that only accepts default (trunk/ma
 No web interface, just a robust git server hosted in the cloud.
 
 ## TODO:
+- [ ] Only allow git ssh command not a ssh interactive shell
 - [ ] CDK tests
 - [ ] Architecture Diagrams
 - [ ] Code linting
