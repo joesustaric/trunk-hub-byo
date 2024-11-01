@@ -9,7 +9,6 @@ No web interface, just a robust git server hosted in the cloud.
 - [ ] CDK tests
 - [ ] Architecture Diagrams
 - [ ] Code linting
-- [ ] Daily Cost Estimate
 - [ ] Figure out how to do configure a push hook to trigger
 - [ ] use https://fck-nat.dev/v1.3.0/ instead of managed NAT(? reduce costs)
 
@@ -64,6 +63,14 @@ If not, deploy the VPC stack first.
 TODO: instructions on how to deploy the app stack
 
 What about DNS? BYO or use Route53 and point to NLB
+
+## Cost
+![cost](./docs/imgs/cost.png)
+
+Approx 5US$ per day for all stacks.
+
+> [!NOTE]
+> YMMV - The cost of data storage and data transfer will increase this of course.
 
 ## Changelog
 This project uses a CHANGELOG.md file to keep track of changes.
