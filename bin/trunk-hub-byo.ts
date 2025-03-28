@@ -9,8 +9,9 @@ import * as cdk from 'aws-cdk-lib';
 const app = new cdk.App();
 
 // Define environment configurations
-const devEnv = { account: '872676544639', region: 'ap-southeast-2' };
-const prodEnv = { account: '872676544639', region: 'ap-southeast-2' };
+
+const devEnv = { account: process.env.AWS_ACCOUNT_ID, region: 'ap-southeast-2' };
+const prodEnv = { account: process.env.AWS_ACCOUNT_ID, region: 'ap-southeast-2' };
 
 // Function to apply tags to a stack
 function applyTags(stack: cdk.Stack, tags: { [key: string]: string }) {
