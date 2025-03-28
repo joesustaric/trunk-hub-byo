@@ -4,9 +4,35 @@ Build a run your own Git Server in the cloud that only accepts default (trunk/ma
 
 No web interface, just a robust git server hosted in the cloud.
 
+## Deploying From Scratch
+
+(MacOS)
+1. Clone the this repository
+1. Set up Python and Node  `.tool-versions` file for suggested versions (via your favorite version manager or `brew`)
+1. Run `npn install`
+1. Install Checkov `brew install checkov`
+1. Authenticate into your AWS account and ensure `AWS_ACCOUNT_ID` is set in your environment
+1. Generate ssh keys by running `./bin/gen-keys.sh`
+1. In `lib/scripts/user-data.sh` file look for `# Configure who has access` comment and put you public key or repeat the line with whoever public keys need access.
+1. Optional: generate Cloudforamtion and check for any security issues `npx cdk synth && checkov`
+1. Deploy VPC stack eg `npx cdk deploy trunk-hub-vpc-prod`
+1. Deploy the App stack `npx cdk deploy trunk-hub-app-prod`
+1. Upload the public keys to parameter store and private keys to secrets manager `./bin/upload-keys.sh`
+1. Terminate any existing EC2 instances - they need to recreate to download the uploaded keys on boot.
+1. Optional: `CNAME` your DNS to the Network Load balancers DNS name. eg `www.trunk-hub.com CNAME> trunk--appnl-HEAf6aOVL6kL-7ed5b8acd25cae90.elb.ap-southeast-2.amazonaws.com` - No Route53 configuration is included here.
+    * If you don't do this step then you will need to use the NLB ip or long DNS name of the NLB to connect.
+1. Connect with session manager to any EC2 instance and run `new-git-repo foobar` to make a new source repo.
+1. Add _your_ private key to your ssh agent the one that corresponds to the public key you put in the `user-data` file
+1. Clone the repo locally to test `git clone git@trunk--appnl-HEAf6aOVL6kL-7ed5b8acd25cae90.elb.ap-southeast-2.amazonaws.com:/srv/git/foobar.git`
+1. Make a commit and push to test it works
+1. Make a branch and push to test it is rejected :)
+
 ## TODO:
+- [ ] GitHub Actions for linting
+- [ ] GitHub Action for testing CDK
+- [ ] Source public keys from somewhere in AWS so it pulls them in on boot.
 - [ ] Only allow git ssh command not a ssh interactive shell
-- [ ] CDK tests
+- [ ] more CDK tests
 - [ ] Architecture Diagrams
 - [ ] Code linting
 - [ ] Figure out how to do configure a push hook to trigger
@@ -45,15 +71,24 @@ This stack will create:
 
 This stack needs several inputs. The EFS file system ID and the KMS Key ID.
 
-## Pre Steps
-TODO: Make a checklist here
-
 
 ### SSH Keys
 
 To ensure the host keys stay the same no matter which EC2 instance you ssh to, you will need to regenerate several keys and upload them to the SSM Parameter Store.
 
-TODO: Add instructions on how to generate the keys and upload them to the SSM Parameter Store.
+To generate all the keys if you're starting from scratch use this script:
+
+```bash
+./bin/gen-keys.sh
+```
+
+This will create a keys directory with both the private and public keys. This directory should be ignored by git.
+
+Once you have deployed the app stack you can then upload the keys via:
+
+```bash
+./bin/upload-keys.sh
+```
 
 ### BYO VPC?
 TODO: If so these are the params the app stack needs.
@@ -86,6 +121,8 @@ Based on the [Keep a Changelog](https://keepachangelog.com) format.
 * `npx cdk deploy`  deploy this stack to your default AWS account/region
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
+
+To stop asking for approval to change and deploy use `--require-approval never` flag.
 
 ## Connecting to Git Servers
 The VPC the app is deployed into should alow for AWS Session Manager to be used to connect to the servers.
