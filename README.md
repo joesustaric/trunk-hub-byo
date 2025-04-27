@@ -17,6 +17,7 @@ No web interface, just a robust git server hosted in the cloud.
 1. Optional: generate Cloudforamtion and check for any security issues `npx cdk synth && checkov`
 1. Deploy VPC stack eg `npx cdk deploy trunk-hub-vpc-prod`
 1. Deploy the App stack `npx cdk deploy trunk-hub-app-prod`
+1. Deploy Backup for EFS `npx cdk deploy trunk-hub-backup-prod`
 1. Upload the public keys to parameter store and private keys to secrets manager `./bin/upload-keys.sh`
 1. Terminate any existing EC2 instances - they need to recreate to download the uploaded keys on boot.
 1. Optional: `CNAME` your DNS to the Network Load balancers DNS name. eg `www.trunk-hub.com CNAME> trunk--appnl-HEAf6aOVL6kL-7ed5b8acd25cae90.elb.ap-southeast-2.amazonaws.com` - No Route53 configuration is included here.
